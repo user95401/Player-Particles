@@ -308,12 +308,12 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
 
                                     return menu;
                                 };
-                            
-                            auto items = CCArray::create();
+
+                            CCMenu* menu = CCMenu::create();
 
                             auto createDefaultLabel = CCLabelBMFont::create("From Default:", "goldFont.fnt");
                             createDefaultLabel->limitLabelWidth(110.f, 0.6f, 0.1f);
-                            items->addObject(createDefaultLabel);
+                            menu->addChild(createDefaultLabel);
 
                             auto createnewImage = ButtonSprite::create(
                                 "Create", 141.000f, 1, "bigFont.fnt", "GJ_button_04.png", 0, 0.7f
@@ -343,15 +343,15 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                                     scroll->m_contentLayer->updateLayout();
                                 }
                             );
-                            items->addObject(createnew);
+                            menu->addChild(createnew);
 
                             auto createFromStringLabel = CCLabelBMFont::create("From String:", "goldFont.fnt");
                             createFromStringLabel->limitLabelWidth(110.f, 0.6f, 0.1f);
-                            items->addObject(createFromStringLabel);
+                            menu->addChild(createFromStringLabel);
 
                             auto inputParticleStr = TextInput::create(110.000f, "particle\nstring here");
                             inputParticleStr->setCommonFilter(CommonFilter::Any);
-                            items->addObject(inputParticleStr);
+                            menu->addChild(inputParticleStr);
 
                             auto createFromStringImage = ButtonSprite::create(
                                 "Create", 141.000f, 1, "bigFont.fnt", "GJ_button_04.png", 0, 0.7f
@@ -382,9 +382,8 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
 
                                 }
                             );
-                            items->addObject(createFromString);
+                            menu->addChild(createFromString);
 
-                            CCMenu* menu = CCMenu::createWithArray(items);
                             menu->alignItemsVerticallyWithPadding(6.f);
                             menu->setPosition({ -338.000f, 174.000f });
                             popup->m_buttonMenu->addChild(menu, 1);
@@ -415,8 +414,8 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                         nullptr
                     );
 
-                    auto items = CCArray::create();
-                    auto createAndAddItem = [selectorPopup, createSavedEffectsPopup, items](std::string title, std::string effectName)
+                    CCMenu* menu = CCMenu::create();
+                    auto createAndAddItem = [selectorPopup, createSavedEffectsPopup, menu](std::string title, std::string effectName)
                         {
                             auto image = ButtonSprite::create(
                                 title.c_str(), "bigFont.fnt", "GJ_button_05.png", 0.7f
@@ -429,14 +428,13 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                                 }
                             );
                             item->getNormalImage()->setScale(0.6f);
-                            items->addObject(item);
+                            menu->addChild(item);
                         };
                     createAndAddItem("Drag Effect", "dragEffect");
                     createAndAddItem("Ship Drag Effect", "shipDragEffect");
                     createAndAddItem("Land Effect", "landEffect");
                     createAndAddItem("Dash Effect", "dashEffect");
 
-                    CCMenu* menu = CCMenu::createWithArray(items);
                     menu->alignItemsVerticallyWithPadding(-6.f);
                     selectorPopup->m_mainLayer->addChild(menu, 1);
 
