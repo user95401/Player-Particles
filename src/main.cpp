@@ -415,8 +415,8 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                         nullptr
                     );
 
-                    auto items = CCArray::create();
-                    auto createAndAddItem = [selectorPopup, createSavedEffectsPopup, items](std::string title, std::string effectName)
+                    CCMenu* menu = CCMenu::create();
+                    auto createAndAddItem = [selectorPopup, createSavedEffectsPopup, menu](std::string title, std::string effectName)
                         {
                             auto image = ButtonSprite::create(
                                 title.c_str(), "bigFont.fnt", "GJ_button_05.png", 0.7f
@@ -429,14 +429,13 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                                 }
                             );
                             item->getNormalImage()->setScale(0.6f);
-                            items->addObject(item);
+                            menu->addChild(item);
                         };
                     createAndAddItem("Drag Effect", "dragEffect");
                     createAndAddItem("Ship Drag Effect", "shipDragEffect");
                     createAndAddItem("Land Effect", "landEffect");
                     createAndAddItem("Dash Effect", "dashEffect");
 
-                    CCMenu* menu = CCMenu::createWithArray(items);
                     menu->alignItemsVerticallyWithPadding(-6.f);
                     selectorPopup->m_mainLayer->addChild(menu, 1);
 
