@@ -50,12 +50,11 @@ public:
         setOpacity(cocos2d::ccWHITE.r);
 
 #ifndef GEODE_IS_MAC
-        auto scroll = CCScrollView::create(this->getContentSize(), m_particleRef);
+        //auto scroll = CCScrollView::create(this->getContentSize(), m_particleRef);
 #else
-        auto scroll = CCLayer::create();
-        scroll->setContentSize(this->getContentSize());
-        scroll->addChild(m_particleRef);
 #endif // !GEODE_IS_MAC
+        auto scroll = CCLayer::create();
+        scroll->setContentSize();
 
         addChild(scroll);
 
