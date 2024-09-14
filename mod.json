@@ -11,17 +11,6 @@
 	"version": "v1.0.1",
 	"developer": "user95401",
 	"description": "customize player particles for drag, land etc",
-	"tags": [ "gameplay", "offline", "enhancement", "interface", "utility", "customization", "developer" ],
-	"links": {
-		"community": "https://discord.gg/6SxAbk3bTA",
-		"homepage": "https://t.me/user95401_channel",
-		"source": "https://github.com/user95401/Player-Particles"
-	},
-	"dependencies": [
-		{
-			"id": "geode.node-ids",
-			"version": ">=v1.13.2",
-			"importance": "required"
-		}
-	]
+	"tags": [ "gameplay", "offline", "enhancement", "interface", "utility", "customization", "developer" ]
+
 }
