@@ -66,7 +66,7 @@ namespace geode::cocos {
     }
     inline auto findDataNode(CCNode* parent, std::string id) {
         auto node = typeinfo_cast<CCLabelBMFont*>(parent->getChildByIDRecursive(id));
-        if (node) log::warn("FAILED TO FIND DATA NODE! id: {}", id);
+        if (!node) log::warn("FAILED TO FIND DATA NODE! id: {}", id);
         return node;
     }
 };
