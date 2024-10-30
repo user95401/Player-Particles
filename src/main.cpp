@@ -281,18 +281,18 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                                 editParticleImage->m_BGSprite->setContentWidth(184.000f / 2.5f);
                                 editParticleImage->m_BGSprite->setContentHeight(32.000f);
                                 auto editParticle = CCMenuItemExt::createSpriteExtra(
-                                    editParticleImage, [menu, restartParticle, resetFileParticle, effectName, id](auto) {
+                                    editParticleImage, [popup, menu, restartParticle, resetFileParticle, effectName, id](auto) {
                                         auto data = std::string(findDataNode(menu, "data")->getString());
-                                        auto popup = ParticlePopup::get(data);
-                                        popup->show();
-                                        popup->setZOrder(CCScene::get()->getChildrenCount());
-                                        auto okBtn = cocos::findFirstChildRecursive<CCMenuItemSpriteExtra>(popup, [](auto) {return true; });
+                                        auto particle_popup = ParticlePopup::get(data);
+                                        particle_popup->show();
+                                        particle_popup->setZOrder(CCScene::get()->getChildrenCount());
+                                        auto okBtn = cocos::findFirstChildRecursive<CCMenuItemSpriteExtra>(particle_popup, [](auto) {return true; });
                                         CCMenuItemExt::assignCallback<CCMenuItemSpriteExtra>(
-                                            okBtn, [popup, menu, restartParticle, resetFileParticle, effectName, id](auto) {
+                                            okBtn, [particle_popup, popup, menu, restartParticle, resetFileParticle, effectName, id](auto) {
                                                 findDataNode(menu, "data")->setString(
-                                                    GameToolbox::saveParticleToString(popup->m_particle).c_str()
+                                                    GameToolbox::saveParticleToString(particle_popup->m_particle).c_str()
                                                 );
-                                                popup->onClose(popup);
+                                                particle_popup->onClose(particle_popup);
 
                                                 auto data = std::string(findDataNode(menu, "data")->getString());
                                                 auto arr = Mod::get()->getSavedValue<matjson::Array>(effectName + ".saved");
@@ -310,7 +310,8 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                                                 resetFileParticle->activate();
                                             }
                                         );
-                                        //handleTouchPriority(popup);
+                                        handleTouchPriority(popup, 1);
+                                        handleTouchPriority(CCScene::get(), 1);
                                         //handleTouchPriority(menu);
                                     }
                                 );
@@ -450,6 +451,14 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                 menu->alignItemsVerticallyWithPadding(-6.f);
                 selectorPopup->m_mainLayer->addChild(menu, 1);
 
+                auto infbtn = CCMenuItemExt::createSpriteExtraWithFrameName("GJ_infoIcon_001.png", 1.0,
+                    [](auto) {
+                        geode::openIndexPopup(getMod());
+                    }
+                );
+                infbtn->setPosition(148.f, 82.f);
+                menu->addChild(infbtn);
+
                 handleTouchPriority(selectorPopup);
 
             }
@@ -475,6 +484,42 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
 
 #include <Geode/modify/CCParticleSystemQuad.hpp>
 class $modify(CCParticleSystemQuadCustomPlayerParticles, CCParticleSystemQuad) {
+    void customUpdate(float dt = 1337.f) {
+
+        if (this == nullptr) return; //fuck this
+        if (!typeinfo_cast<CCParticleSystemQuad*>(this)) return; //hi
+
+        if (dt == 1337.f) {
+            this->schedule(
+                schedule_selector(CCParticleSystemQuadCustomPlayerParticles::customUpdate)
+            );
+            //initial_str
+            auto original = GameToolbox::particleFromString(
+                GameToolbox::saveParticleToString(this), nullptr, 0
+            );
+            original->setVisible(0);
+            original->setID("original"_spr);
+            this->addChild(original);
+        }
+        if (dt == 1337.f) return; //asd
+
+        if (auto original = typeinfo_cast<CCParticleSystemQuad*>(this->getChildByID("original"_spr))) {
+            if (getMod()->getSettingValue<bool>("Force initial Gravity")) {
+                this->setGravity(original->getGravity());
+            }
+            if (getMod()->getSettingValue<bool>("Force initial Colors")) {
+                this->setStartColor(original->getStartColor());
+                this->setStartColorVar(original->getStartColorVar());
+                this->setEndColor(original->getEndColor());
+                this->setEndColorVar(original->getEndColorVar());
+            }
+            if (getMod()->getSettingValue<bool>("Force initial PosVar")) {
+                this->setPosVar(original->getPosVar());
+            }
+            this->setPositionType(original->getPositionType());
+        }
+
+    }
     $override static CCParticleSystemQuad* create(const char* file, bool idk) {
         auto orgone = CCParticleSystemQuad::create(file, idk);
 
@@ -489,15 +534,19 @@ class $modify(CCParticleSystemQuadCustomPlayerParticles, CCParticleSystemQuad) {
         if (fileExistsInSearchPaths(stringDataFileName.c_str())) {
             //fs::read uses CCFileUtils::getFileData
             auto data = fs::read(stringDataFileName.c_str());
-            return GameToolbox::particleFromString(data, CCParticleSystemQuad::create(), idk);
+            auto rtn = GameToolbox::particleFromString(data, CCParticleSystemQuad::create(), idk);
+            reinterpret_cast<CCParticleSystemQuadCustomPlayerParticles*>(rtn)->customUpdate();
+            return rtn;
         }
 
         auto saves = Mod::get()->getSaveContainer();
         if (saves.contains(effectName)) {
-            return GameToolbox::particleFromString(
+            auto rtn = GameToolbox::particleFromString(
                 saves.try_get<std::string>(effectName).value_or(defaultEffects[effectName]),
                 CCParticleSystemQuad::create(), idk
             );
+            reinterpret_cast<CCParticleSystemQuadCustomPlayerParticles*>(rtn)->customUpdate();
+            return rtn;
         }
 
         return orgone;

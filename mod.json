@@ -1,5 +1,5 @@
 {
-	"geode": "3.6.1",
+	"geode": "3.8.1",
 	"gd": {
 		"win": "2.206",
 		"android": "2.206",
@@ -8,7 +8,7 @@
 	},
 	"id": "user95401.player_particles",
 	"name": "Player Particles",
-	"version": "v1.0.1",
+	"version": "v1.1.0",
 	"developer": "user95401",
 	"description": "customize player particles for drag, land etc",
 	"tags": [ "gameplay", "offline", "enhancement", "interface", "utility", "customization", "developer" ],
@@ -23,5 +23,22 @@
 			"version": ">=v1.13.2",
 			"importance": "required"
 		}
-	]
+	],
+	"settings": {
+		"Force initial Gravity": {
+			"name": "Force initial Gravity",
+			"type": "bool",
+			"default": true
+		},
+		"Force initial Colors": {
+			"name": "Force initial Colors",
+			"type": "bool",
+			"default": true
+		},
+		"Force initial PosVar": {
+			"name": "Force initial PosVar",
+			"type": "bool",
+			"default": true
+		}
+	}
 }
