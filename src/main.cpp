@@ -472,7 +472,7 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
         particles->setScale(1.300f);
         openupbtn->addChild(particles, -3);
 
-        auto menu = CCMenu::create(openupbtn, nullptr);
+        auto menu = CCMenu::createWithItem(openupbtn);
         menu->setID("openupbtn-menu"_spr);
         menu->setPositionX(this->getContentWidth());
         menu->setPositionY(0.f);
