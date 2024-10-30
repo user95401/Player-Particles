@@ -48,14 +48,14 @@ public:
         setContentSize({ 110.f, 90.f });
         setColor(cocos2d::ccBLACK);
         setOpacity(cocos2d::ccWHITE.r);
-
-#ifndef GEODE_IS_MAC
+        
+#ifndef __APPLE__
         auto scroll = CCScrollView::create(this->getContentSize(), m_particleRef);
 #else
         auto scroll = CCLayer::create();
         scroll->setContentSize(this->getContentSize());
         scroll->addChild(m_particleRef);
-#endif // !GEODE_IS_MAC
+#endif // !__APPLE__
 
         addChild(scroll);
 
