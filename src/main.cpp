@@ -311,7 +311,6 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                                             }
                                         );
                                         handleTouchPriority(popup, 1);
-                                        handleTouchPriority(CCScene::get(), 1);
                                         //handleTouchPriority(menu);
                                     }
                                 );
