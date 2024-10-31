@@ -286,13 +286,29 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                                         auto particle_popup = ParticlePopup::get(data);
                                         particle_popup->show();
                                         particle_popup->setZOrder(CCScene::get()->getChildrenCount());
+                                        particle_popup->runAction(/*CCRepeatForever::create*/(CCSequence::create(
+                                            CCDelayTime::create(0.1f),
+                                            CCLambdaAction::create(
+                                                [particle_popup]() {
+                                                    //aaaaaaahhhh fuck this shit so much
+                                                    cocos::setTouchPriority(particle_popup.data(), -506);
+                                                    cocos::findFirstChildRecursive<CCLayer>(
+                                                        particle_popup->m_mainLayer, [](CCLayer* node) {
+                                                            cocos::setTouchPriority(node, -507);
+                                                            return false;
+                                                        }
+                                                    );
+                                                    //log::debug("{}", __FUNCTION__);
+                                                }
+                                            ), nullptr
+                                        )));
                                         auto okBtn = cocos::findFirstChildRecursive<CCMenuItemSpriteExtra>(particle_popup, [](auto) {return true; });
                                         CCMenuItemExt::assignCallback<CCMenuItemSpriteExtra>(
                                             okBtn, [particle_popup, popup, menu, restartParticle, resetFileParticle, effectName, id](auto) {
                                                 findDataNode(menu, "data")->setString(
                                                     GameToolbox::saveParticleToString(particle_popup->m_particle).c_str()
                                                 );
-                                                particle_popup->onClose(particle_popup);
+                                                particle_popup->removeFromParentAndCleanup(0);
 
                                                 auto data = std::string(findDataNode(menu, "data")->getString());
                                                 auto arr = Mod::get()->getSavedValue<matjson::Array>(effectName + ".saved");
