@@ -1,3 +1,8 @@
+# [v1.2.0](https://github.com/user95401/Player-Particles/compare/v1.1.0...v1.1.1)
+- migrate to geode sdk v4
+- set some node ids
+- add more effects to change
+
 # [v1.1.1](https://github.com/user95401/Player-Particles/compare/v1.1.0...v1.1.1)
 - still trying to fix touch prio
 

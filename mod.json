@@ -1,14 +1,14 @@
 {
-	"geode": "3.9.0",
+	"geode": "4.0.0-alpha.1",
 	"gd": {
-		"win": "2.206",
-		"android": "2.206",
-		"mac": "2.206",
-		"ios": "2.206"
+		"win": "2.2074",
+		"android": "2.2074",
+		"mac": "2.2074",
+		"ios": "2.2074"
 	},
 	"id": "user95401.player_particles",
 	"name": "Player Particles",
-	"version": "v1.1.1",
+	"version": "v1.2.0",
 	"developer": "user95401",
 	"description": "customize player particles for drag, land etc",
 	"tags": [ "gameplay", "offline", "enhancement", "interface", "utility", "customization", "developer" ],
@@ -20,7 +20,7 @@
 	"dependencies": [
 		{
 			"id": "geode.node-ids",
-			"version": ">=v1.13.2",
+			"version": ">=v1.17.0-alpha.1",
 			"importance": "required"
 		}
 	],
@@ -35,8 +35,8 @@
 			"type": "bool",
 			"default": true
 		},
-		"Force initial PosVar": {
-			"name": "Force initial PosVar",
+		"Force initial Positioning": {
+			"name": "Force initial Positioning",
 			"type": "bool",
 			"default": true
 		}

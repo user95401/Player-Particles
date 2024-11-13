@@ -1,12 +1,12 @@
 #include <_main.hpp>
 
-std::map<std::string, std::string> defaultEffects;
-$execute{
-    defaultEffects["dragEffect"] = "30a-1a0.3a0.15a99a90a45a75a20a5a1a0a-300a0a0a0a0a4a3a0a0a1a0.1a1a0.1a1a0.1a1a0a0a0a0a0a0a0a0a0a0a0a1a0a0a0a0a0a0a0a0a0a0a0a0a1a1a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0";
-    defaultEffects["shipDragEffect"] = "40a-1a0.3a0.15a133a110a45a94a20a9a1a-350a-300a0a0a0a0a3a2a0a0a1a0.1a1a0.1a1a0.1a1a0a0a0a0a0a0a0a0a0a0a0a1a0a0a0a0a0a0a0a0a0a0a0a0a0a1a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0";
-    defaultEffects["landEffect"] = "10a0.02a0a0.6a-1a90a60a150a25a10a0a0a-500a0a0a0a0a5a3a0a0a1a0.1a1a0.1a1a0.1a1a0.5a0a0a0a0a0a0a0a0a0a0a1a0a0a0a0a0a0a0a0a0a0a0a0a0a1a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0";
-    defaultEffects["dashEffect"] = "50a-1a0.4a0.2a125a180a0a25a12a0a12a0a0a0a0a0a0a8a4a0a0a1a0a1a0a1a0a1a0a0a1a0a0a0a0a0a0a0a0a1a0a0a0a0a0a0a0a0a0a0a0a0a0a1a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0";
-};
+std::string defaultEffect(std::string name) {
+    return GameToolbox::saveParticleToString(
+        CCParticleSystemQuad::create(
+            (name + ".plist!original").c_str(), 0
+        )
+    );
+}
 
 class ParticlePopup : public CreateParticlePopup {
 public:
@@ -88,6 +88,7 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                             "Go Back", nullptr,
                             [item](auto, auto) { item->activate(); }
                         );
+                        popup->setID("savedEffectsPopup"_spr);
                         popup->setZOrder(CCScene::get()->getChildrenCount());
                         popup->m_mainLayer->setPositionX(56.f);
                         popup->m_buttonMenu->setPositionX(100.f + popup->m_buttonMenu->getPositionX());
@@ -250,15 +251,15 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                                     deleteParticleImage, [menu, scroll, resetFileParticle, effectName, id](auto) {
 
                                         auto data = std::string(findDataNode(menu, "data")->getString());
-                                        auto arr = Mod::get()->getSavedValue<matjson::Array>(effectName + ".saved");
-                                        auto newarr = matjson::Array();
+                                        auto arr = Mod::get()->getSavedValue<matjson::Value>(effectName + ".saved").asArray().unwrapOrDefault();
+                                        auto newarr = matjson::Value().array().asArray().unwrapOrDefault();
                                         for (auto val : arr) {
-                                            if (val.as_array()[0] != id) {
+                                            if (val.asArray().unwrap()[0] != id) {
                                                 newarr.push_back(val);
                                             }
                                         }
                                         if (Mod::get()->getSavedValue<std::string>(effectName) == data) {
-                                            Mod::get()->getSaveContainer().try_erase(effectName);
+                                            Mod::get()->getSaveContainer().erase(effectName);
                                             resetFileParticle->activate();
                                         }
                                         Mod::get()->setSavedValue(effectName + ".saved", newarr);
@@ -311,11 +312,11 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                                                 particle_popup->removeFromParentAndCleanup(0);
 
                                                 auto data = std::string(findDataNode(menu, "data")->getString());
-                                                auto arr = Mod::get()->getSavedValue<matjson::Array>(effectName + ".saved");
-                                                auto newarr = matjson::Array();
+                                                auto arr = Mod::get()->getSavedValue<matjson::Value>(effectName + ".saved").asArray().unwrapOrDefault();
+                                                auto newarr = matjson::Value().array().asArray().unwrapOrDefault();
                                                 for (auto val : arr) {
-                                                    if (val.as_array()[0] == id) {
-                                                        val.as_array()[1] = (data);
+                                                    if (val.asArray().unwrap()[0] == id) {
+                                                        val.asArray().unwrap()[1] = (data);
                                                     }
                                                     newarr.push_back(val);
                                                 }
@@ -350,21 +351,25 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                         auto createnew = CCMenuItemExt::createSpriteExtra(
                             createnewImage, [popup, effectName, scroll, createParticleCard](auto) {
 
-                                auto arr = Mod::get()->getSavedValue<matjson::Array>(effectName + ".saved");
+                                auto arr = Mod::get()->getSavedValue<matjson::Value>(effectName + ".saved").asArray().unwrapOrDefault();
                                     
                                 auto freeID = 1;
                                 for (auto particle_arr : arr) {
-                                    auto particle_id = particle_arr[0].as_int();
+                                    auto particle_id = particle_arr[0].asInt().unwrapOr(-1);
                                     if (particle_id >= freeID) freeID = (particle_id + 1);
                                 }
 
-                                matjson::Array item = { freeID, defaultEffects[effectName] };
+                                auto item = matjson::Value().array();
+                                item.asArray().unwrap().push_back(freeID);
+                                item.asArray().unwrap().push_back(defaultEffect(effectName));
+
                                 arr.push_back(item);
+
                                 Mod::get()->setSavedValue(effectName + ".saved", arr);
                                 Mod::get()->saveData();
 
                                 auto card = createParticleCard(
-                                    defaultEffects[effectName],
+                                    defaultEffect(effectName),
                                     freeID
                                 );
                                 scroll->m_contentLayer->addChild(card);
@@ -388,16 +393,20 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                         auto createFromString = CCMenuItemExt::createSpriteExtra(
                             createFromStringImage, [popup, inputParticleStr, effectName, scroll, createParticleCard](auto) {
 
-                                auto arr = Mod::get()->getSavedValue<matjson::Array>(effectName + ".saved");
+                                auto arr = Mod::get()->getSavedValue<matjson::Value>(effectName + ".saved").asArray().unwrapOrDefault();
 
                                 auto freeID = 1;
                                 for (auto particle_arr : arr) {
-                                    auto particle_id = particle_arr[0].as_int();
+                                    auto particle_id = particle_arr[0].asInt().unwrapOr(-1);
                                     if (particle_id >= freeID) freeID = (particle_id + 1);
                                 }
 
-                                matjson::Array item = { freeID, inputParticleStr->getString() };
+                                auto item = matjson::Value().array();
+                                item.asArray().unwrap().push_back(freeID);
+                                item.asArray().unwrap().push_back(inputParticleStr->getString());
+
                                 arr.push_back(item);
+
                                 Mod::get()->setSavedValue(effectName + ".saved", arr);
                                 Mod::get()->saveData();
 
@@ -416,11 +425,11 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                         menu->setPosition({ -338.000f, 174.000f });
                         popup->m_buttonMenu->addChild(menu, 1);
 
-                        auto arr = Mod::get()->getSavedValue<matjson::Array>(effectName + ".saved");
+                        auto arr = Mod::get()->getSavedValue<matjson::Value>(effectName + ".saved").asArray().unwrapOrDefault();
                         for (auto particle_arr : arr) {
                             auto card = createParticleCard(
-                                particle_arr.as_array()[1].as_string(),
-                                particle_arr.as_array()[0].as_int()
+                                particle_arr.asArray().unwrap()[1].asString().unwrapOr(""),
+                                particle_arr.asArray().unwrap()[0].asInt().unwrapOr(-1)
                             );
                             scroll->m_contentLayer->addChild(card);
                         }
@@ -437,10 +446,11 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
 
                 auto selectorPopup = createQuickPopup(
                     "Select Effect", 
-                    "\n \n \n \n \n \n",
+                    "\n \n \n \n \n \n \n \n \n",
                     "Close", nullptr, 
                     nullptr
                 );
+                selectorPopup->setID("selectorPopup"_spr);
 
                 CCMenu* menu = CCMenu::create();
                 auto createAndAddItem = [selectorPopup, createSavedEffectsPopup, menu](std::string title, std::string effectName)
@@ -448,30 +458,45 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                         auto image = ButtonSprite::create(
                             title.c_str(), "bigFont.fnt", "GJ_button_05.png", 0.7f
                         );
-                        image->m_BGSprite->setContentWidth(392.000f);
+                        image->setScale(0.6f);
+                        //image->m_BGSprite->setContentWidth(392.000f);
                         auto item = CCMenuItemExt::createSpriteExtra(
                             image, [selectorPopup, createSavedEffectsPopup, effectName](auto) {
                                 selectorPopup->keyBackClicked();
                                 createSavedEffectsPopup(effectName);
                             }
                         );
-                        item->getNormalImage()->setScale(0.6f);
                         menu->addChild(item);
                     };
-                createAndAddItem("Drag Effect", "dragEffect");
-                createAndAddItem("Ship Drag Effect", "shipDragEffect");
-                createAndAddItem("Land Effect", "landEffect");
-                createAndAddItem("Dash Effect", "dashEffect");
 
-                menu->alignItemsVerticallyWithPadding(-6.f);
+                createAndAddItem("Drag", "dragEffect");
+                createAndAddItem("Ship Drag", "shipDragEffect");
+                createAndAddItem("Land", "landEffect");
+                createAndAddItem("Dash", "dashEffect");
+
+                createAndAddItem("Burst", "burstEffect");
+                createAndAddItem("Burst 2", "burstEffect2");
+                createAndAddItem("Swing Burst", "swingBurstEffect");
+
+                createAndAddItem("Explode", "explodeEffect");
+                createAndAddItem("Explode Grav", "explodeEffectGrav");
+                createAndAddItem("Explode Vortex", "explodeEffectVortex");
+
+                createAndAddItem("End Portal", "endEffectPortal");
+                createAndAddItem("Level Complete", "levelComplete01");
+                createAndAddItem("firework", "firework");
+
+                menu->setContentHeight(180.f);
+                menu->setContentWidth(160.f);
+                menu->setLayout(ColumnLayout::create()->setGrowCrossAxis(1)->setAxisReverse(1));
                 selectorPopup->m_mainLayer->addChild(menu, 1);
 
                 auto infbtn = CCMenuItemExt::createSpriteExtraWithFrameName("GJ_infoIcon_001.png", 1.0,
                     [](auto) {
-                        geode::openIndexPopup(getMod());
+                        geode::openInfoPopup(getMod());
                     }
                 );
-                infbtn->setPosition(148.f, 82.f);
+                infbtn->setPosition(258.f, 202.f);
                 menu->addChild(infbtn);
 
                 handleTouchPriority(selectorPopup);
@@ -528,20 +553,20 @@ class $modify(CCParticleSystemQuadCustomPlayerParticles, CCParticleSystemQuad) {
                 this->setEndColor(original->getEndColor());
                 this->setEndColorVar(original->getEndColorVar());
             }
-            if (getMod()->getSettingValue<bool>("Force initial PosVar")) {
+            if (getMod()->getSettingValue<bool>("Force initial Positioning")) {
                 this->setPosVar(original->getPosVar());
+                this->setPositionType(original->getPositionType());
             }
-            this->setPositionType(original->getPositionType());
         }
 
     }
     $override static CCParticleSystemQuad* create(const char* file, bool idk) {
-        auto orgone = CCParticleSystemQuad::create(file, idk);
 
-        if (0) log::debug(
-            "defaultEffects[\"{}\"] = \"{}\";", file,
-            GameToolbox::saveParticleToString(orgone)
+        if (string::contains(file, "!original")) return CCParticleSystemQuad::create(
+            string::replace(file, "!original", "").c_str(), idk
         );
+
+        auto orgone = CCParticleSystemQuad::create(file, idk);
 
         auto effectName = fs::path(file).filename().replace_extension("").string();
 
@@ -556,8 +581,9 @@ class $modify(CCParticleSystemQuadCustomPlayerParticles, CCParticleSystemQuad) {
 
         auto saves = Mod::get()->getSaveContainer();
         if (saves.contains(effectName)) {
+            auto saves_effect = saves.get(effectName);
             auto rtn = GameToolbox::particleFromString(
-                saves.try_get<std::string>(effectName).value_or(defaultEffects[effectName]),
+                saves_effect.isOk() ? saves_effect.unwrap().asString().unwrapOr("asd") : defaultEffect(effectName),
                 CCParticleSystemQuad::create(), idk
             );
             reinterpret_cast<CCParticleSystemQuadCustomPlayerParticles*>(rtn)->customUpdate();
