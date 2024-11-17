@@ -1,4 +1,10 @@
-# [v1.2.0](https://github.com/user95401/Player-Particles/compare/v1.1.0...v1.1.1)
+# [v1.3.0](https://github.com/user95401/Player-Particles/compare/v1.2.0...v1.3.0)
+- center player particles
+- custom particle texure
+- update info
+- forcing not eanbels by default
+
+# [v1.2.0](https://github.com/user95401/Player-Particles/compare/v1.1.1...v1.2.0)
 - migrate to geode sdk v4
 - set some node ids
 - add more effects to change

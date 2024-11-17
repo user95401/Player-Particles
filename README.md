@@ -1,24 +1,37 @@
 # Player Particles
 
-- __customize player particles for drag, land etc__
+- __Customize player particles for drag, land etc__
 
-add a ui and use saved data system to make able u create own particles for basic player effects
+Add a ui and use saved data system to make able u create own particles for basic player effects
+
+- __Particle variables forcing__
+
+In settings you can enable forcing intital gravity/colors/position that getting changed by game while you playing level.
 
 - __.txt file "particle from string" loader__
 
-u can create `EFFECT_NAME.txt` instead of `EFFECT_NAME.plist` to use **string system** instead xml dict. and also u can edit any other effect by that way.
+You can create `EFFECT_NAME.`<cy>`txt`</c> instead of `EFFECT_NAME.plist` to use **string system** instead xml dict. and also u can edit any other effect by that way.
+
+Put txt file to any search paths.
+
+- __Custom texture for particles__
+
+Put `EFFECT_NAME.`<cy>`png`</c> to any search paths.
 
 ---
 
-#### <cr>WARN:</c>
+`EFFECT_NAME is an original name of effect like dragEffect, shipDragEffect, landEffect, dashEffect...`
 
-<co>- By default the "Force initial Gravity" and other </c><cr>settings about **forcing** is **ENABLED**.</c>
-
-<co>- Default </c><cr>**point mode** for some particles is **FREE or even GROUPED**</c><co>, it will looks ugly and </c><cy>you should set __**RELATIVE**__.</c>
-
-
----
-
+### Search Paths?
+The folders where game search for resources:
+```
+- [config dirs of this mod]
+- [your texture pack]
+- ./
+- ./Resources
+- ./geode/resources
+and any other paths ever added at runtime.
+```
 
 
 <img src="logo.png" width="150" alt="the mod's logo" />

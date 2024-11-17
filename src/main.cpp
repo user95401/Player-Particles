@@ -478,6 +478,9 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                 createAndAddItem("Burst 2", "burstEffect2");
                 createAndAddItem("Swing Burst", "swingBurstEffect");
 
+                createAndAddItem("Back Center Particles", "playerBackCenterParticles");
+                createAndAddItem("Front Center Particles", "playerFrontCenterParticles");
+
                 createAndAddItem("Explode", "explodeEffect");
                 createAndAddItem("Explode Grav", "explodeEffectGrav");
                 createAndAddItem("Explode Vortex", "explodeEffectVortex");
@@ -487,8 +490,8 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                 createAndAddItem("firework", "firework");
 
                 menu->setContentHeight(180.f);
-                menu->setContentWidth(160.f);
-                menu->setLayout(ColumnLayout::create()->setGrowCrossAxis(1)->setAxisReverse(1));
+                menu->setContentWidth(320.f);
+                menu->setLayout(RowLayout::create()->setGrowCrossAxis(1));
                 selectorPopup->m_mainLayer->addChild(menu, 1);
 
                 auto infbtn = CCMenuItemExt::createSpriteExtraWithFrameName("GJ_infoIcon_001.png", 1.0,
@@ -496,8 +499,9 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                         geode::openInfoPopup(getMod());
                     }
                 );
-                infbtn->setPosition(258.f, 202.f);
-                menu->addChild(infbtn);
+                infbtn->setPosition(146.f, 222.f);
+                infbtn->setID("infbtn"_spr);
+                selectorPopup->m_buttonMenu->addChild(infbtn);
 
                 handleTouchPriority(selectorPopup);
 
@@ -519,6 +523,44 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
         this->addChild(menu, 1);
 
         return 1;
+    }
+};
+
+#include <Geode/modify/PlayerObject.hpp>
+class $modify(PlayerObjectParticlesAddon, PlayerObject) {
+    struct Fields {
+        CCParticleSystemQuad* m_backCenter;
+        CCParticleSystemQuad* m_frontCenter;
+    };
+    $override void update(float p0) {
+        PlayerObject::update(p0);
+        if (auto backCenter = m_fields->m_backCenter) {
+            backCenter->setPosition(this->getPosition());
+            backCenter->setZOrder(this->getZOrder() - 1);
+            this->m_isHidden or this->m_isDead ? backCenter->stopSystem() : backCenter->resumeSystem();
+        }
+        if (auto frontCenter = m_fields->m_frontCenter) {
+            frontCenter->setPosition(this->getPosition());
+            frontCenter->setZOrder(this->getZOrder() + 1);
+            this->m_isHidden or this->m_isDead ? frontCenter->stopSystem() : frontCenter->resumeSystem();
+        }
+    }
+    $override bool init(int p0, int p1, GJBaseGameLayer * p2, cocos2d::CCLayer * p3, bool p4) {
+        if (!PlayerObject::init(p0, p1, p2, p3, p4)) return false;
+
+        if (auto playerBackCenterParticles = CCParticleSystemQuad::create("playerBackCenterParticles.plist", 0)) {
+            m_fields->m_backCenter = playerBackCenterParticles;
+            m_fields->m_backCenter->setID(this->getID() + "-back-center-particles"_spr);
+            if (this->m_parentLayer) this->m_parentLayer->addChild(m_fields->m_backCenter, this->getZOrder() - 1);
+        };
+
+        if (auto playerFrontCenterParticles = CCParticleSystemQuad::create("playerFrontCenterParticles.plist", 0)) {
+            m_fields->m_frontCenter = playerFrontCenterParticles;
+            m_fields->m_frontCenter->setID(this->getID() + "-back-center-particles"_spr);
+            if (this->m_parentLayer) this->m_parentLayer->addChild(m_fields->m_frontCenter, this->getZOrder() + 1);
+        };
+
+        return true;
     }
 };
 
@@ -560,6 +602,14 @@ class $modify(CCParticleSystemQuadCustomPlayerParticles, CCParticleSystemQuad) {
         }
 
     }
+    static void updateImage(CCParticleSystemQuad* particle, const char* effectFile) {
+        auto effectName = fs::path(effectFile).filename().replace_extension("").string();
+        auto particleImageFileName = effectName + ".png";
+        if (fileExistsInSearchPaths(particleImageFileName.c_str())) {
+            auto sprite = CCSprite::create(particleImageFileName.c_str());
+            if (sprite) particle->setDisplayFrame(sprite->displayFrame());
+        }
+    }
     $override static CCParticleSystemQuad* create(const char* file, bool idk) {
 
         if (string::contains(file, "!original")) return CCParticleSystemQuad::create(
@@ -576,6 +626,7 @@ class $modify(CCParticleSystemQuadCustomPlayerParticles, CCParticleSystemQuad) {
             auto data = fs::read(stringDataFileName.c_str());
             auto rtn = GameToolbox::particleFromString(data, CCParticleSystemQuad::create(), idk);
             reinterpret_cast<CCParticleSystemQuadCustomPlayerParticles*>(rtn)->customUpdate();
+            updateImage(rtn, file);
             return rtn;
         }
 
@@ -587,8 +638,11 @@ class $modify(CCParticleSystemQuadCustomPlayerParticles, CCParticleSystemQuad) {
                 CCParticleSystemQuad::create(), idk
             );
             reinterpret_cast<CCParticleSystemQuadCustomPlayerParticles*>(rtn)->customUpdate();
+            updateImage(rtn, file);
             return rtn;
         }
+
+        updateImage(orgone, file);
 
         return orgone;
     }
