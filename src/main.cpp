@@ -1,4 +1,5 @@
 #include <_main.hpp>
+#include <_updater.hpp>
 
 std::string defaultEffect(std::string name) {
     return GameToolbox::saveParticleToString(
