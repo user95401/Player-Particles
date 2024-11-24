@@ -25,7 +25,6 @@ Put `EFFECT_NAME.`<cy>`png`</c> to any search paths.
 ### Search Paths?
 The folders where game search for resources:
 ```
-- [config dirs of this mod]
 - [your texture pack]
 - ./
 - ./Resources
