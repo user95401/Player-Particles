@@ -1,3 +1,6 @@
+#### Mod developer was banned on Geode for dumb reasons, but he still keeps his mods up-to-date. See working latest versions at [releases page](/releases)!
+> Yes, u can't find it in geode servers, download it and install manually.
+
 # Player Particles
 
 - __Customize player particles for drag, land etc__
