@@ -160,12 +160,14 @@ public:
                             GameToolbox::particleFromStruct(*particleData, m_particle, 0);
                         }
 
-                        ImGui::InputText("Sprite Frame (Not Being Saved!)", &particleData->sFrame);
+                        auto particleData_sFrame = std::string(particleData->sFrame.data());
+                        ImGui::InputText("Sprite Frame (Not Being Saved!)", &particleData_sFrame);
                         if (ImGui::IsItemEdited() || ImGui::IsItemDeactivatedAfterEdit()) {
-
+                            particleData->sFrame = particleData_sFrame;
                             std::regex pattern(R"(particle_(\d+)_001\.png)");
                             std::smatch match;
-                            if (std::regex_match(particleData->sFrame, match, pattern)) {
+                            auto fuckyou = std::string(particleData->sFrame.data());
+                            if (std::regex_match(fuckyou, match, pattern)) {
                                 particleData->customParticleIdx = std::stoi(match[1]);
                             }
 
@@ -180,7 +182,9 @@ public:
                 ImGui::Begin("Params Setup", &m_bVisible, ImGuiWindowFlags_AlwaysAutoResize);
                 ImGui::SetWindowFontScale(1.65f);
 
-                if (ImGui::InputText("##ps-input", &ps)) {
+                auto str_ps = std::string(ps.data());
+                if (ImGui::InputText("##ps-input", &str_ps)) {
+                    ps = str_ps.data();
                     GameToolbox::particleFromString(ps, m_particle, 0);
                     GameToolbox::particleStringToStruct(ps, *particleData);
                 }
