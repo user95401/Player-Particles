@@ -32,3 +32,6 @@ set(GEODE_BINDINGS_REPO_PATH ${bindings_SOURCE_DIR})
 add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 
 setup_geode_mod(${PROJECT_NAME})
+
+CPMAddPackage("gh:matcool/gd-imgui-cocos#fbd4103")
+target_link_libraries(${PROJECT_NAME} imgui-cocos)

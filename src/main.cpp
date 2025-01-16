@@ -1,3 +1,5 @@
+
+#include <_ImGui.hpp>
 #include <_main.hpp>
 #include <_updater.hpp>
 
@@ -9,14 +11,233 @@ std::string defaultEffect(std::string name) {
     );
 }
 
-class ParticlePopup : public CreateParticlePopup {
+// specify parameters for the setup function in the Popup<...> template
+class ParticlePopup : public geode::Popup<std::string const&> {
 public:
-    inline static Ref<CreateParticlePopup> sharedObject = nullptr;
-    static auto get(std::string data) {
-        if (!sharedObject.data()) sharedObject = CreateParticlePopup::create(nullptr, nullptr);
-        sharedObject->removeAllChildrenWithCleanup(1);
-        sharedObject->init(nullptr, nullptr, data);
-        return sharedObject;
+    CCParticleSystemQuad* m_particle;
+    ParticleStruct* particleData;
+    gd::string ps;
+
+    bool setup(std::string const& value) override {
+        this->setOpacity(210);
+        m_mainLayer->setPositionX(m_mainLayer->getPositionX() + 110.f);
+        m_mainLayer->getChildByType<CCScale9Sprite>(0)->setVisible(0);
+
+        auto bg = CCSprite::create("game_bg_01_001.png");
+        bg->setBlendFunc({ GL_ONE, GL_ONE });
+        bg->setColor(ccc3(34, 34, 34));
+        bg->setFlipY(true);
+        bg->setScale(0.375f);
+        bg->setPosition(CCPointMake(80.f, 90.f));
+        m_mainLayer->addChild(bg, -1, 1337);
+
+        m_particle = CCParticleSystemQuad::create();
+        GameToolbox::particleFromString(value, m_particle, 0);
+        m_mainLayer->addChildAtPosition(m_particle, Anchor::Center);
+
+        auto scroll = ScrollLayer::create(this->getContentSize());
+        m_mainLayer->removeFromParentAndCleanup(0);
+        scroll->m_contentLayer->addChild(m_mainLayer);
+        scroll->m_disableHorizontal = 0;
+        scroll->m_disableVertical = 0;
+        scroll->m_scrollLimitTop = 1110;
+        scroll->m_scrollLimitBottom = 1110;
+        this->addChild(scroll);
+
+        particleData = new ParticleStruct;
+        GameToolbox::particleStringToStruct(value, *particleData);
+        ps = GameToolbox::saveParticleToString(m_particle);
+
+        this->addChild(ImGuiDrawNode::create(
+            [this]() {
+
+#if 1
+
+#define upd ; if (ImGui::IsItemEdited() || ImGui::IsItemDeactivatedAfterEdit()) { GameToolbox::particleFromStruct(*particleData, m_particle, 0); ps = GameToolbox::saveParticleToString(m_particle);  };
+
+#define SLIDER_INT(label, var, min, max) \
+    ImGui::Text(label); \
+    ImGui::SliderInt("##" label "Slider", &particleData->var, min, max, "%d", ImGuiSliderFlags_AlwaysClamp) upd; \
+    ImGui::SameLine(); \
+    ImGui::InputInt("##" label "Input", &particleData->var) upd;
+
+#define SLIDER_FLOAT(label, var, min, max, format) \
+    ImGui::Text(label); \
+    ImGui::SliderFloat("##" label "Slider", &particleData->var, min, max, format, ImGuiSliderFlags_AlwaysClamp) upd; \
+    ImGui::SameLine(); \
+    ImGui::InputFloat("##" label "Input", &particleData->var, 0.1f, 1.0f, format) upd;
+
+
+#define COLOR_EDIT(label, r, g, b, a) \
+    {float color[4] = { particleData->r, particleData->g, particleData->b, particleData->a }; \
+    if (ImGui::ColorEdit4(label, color, ImGuiColorEditFlags_None)) { \
+        particleData->r = color[0]; \
+        particleData->g = color[1]; \
+        particleData->b = color[2]; \
+        particleData->a = color[3]; \
+        GameToolbox::particleFromStruct(*particleData, m_particle, 0); \
+    }}
+
+                auto renderParticleDataSets = [this](int section) {
+                    if (section == 0) {
+                        // Motion Parameters
+                        SLIDER_INT("Max Particles", TotalParticles, 0, 1000);
+                        SLIDER_FLOAT("Duration", Duration, -10.0f, 10.0f, "%.2f");
+                        SLIDER_FLOAT("Lifetime", Life, 0.0f, 10.0f, "%.2f");
+                        SLIDER_FLOAT("Lifetime Variation", LifeVar, 0.0f, 10.0f, "%.2f");
+                        SLIDER_INT("Emission", EmissionRate, 0, 1000);
+                        SLIDER_INT("Angle", Angle, -180, 180);
+                        SLIDER_INT("Angle Variation", AngleVar, 0, 180);
+                        SLIDER_INT("Speed", Speed, 0, 100);
+                        SLIDER_INT("Speed Variation", SpeedVar, 0, 100);
+                        SLIDER_INT("Position Variation X", PosVarX, 0, 100);
+                        SLIDER_INT("Position Variation Y", PosVarY, 0, 100);
+                        SLIDER_INT("Gravity X", GravityX, -100, 100);
+                        SLIDER_INT("Gravity Y", GravityY, -100, 100);
+                        SLIDER_INT("Radial Acceleration", RadialAccel, -100, 100);
+                        SLIDER_INT("Radial Variation", RadialAccelVar, 0, 100);
+                        SLIDER_INT("Tangential Acceleration", TangentialAccel, -100, 100);
+                        SLIDER_INT("Tangential Variation", TangentialAccelVar, 0, 100);
+                    }
+                    else if (section == 1) {
+                        // Visual Parameters
+                        SLIDER_INT("Start Size", StartSize, 0, 100);
+                        SLIDER_INT("Start Size Variation", StartSizeVar, 0, 100);
+                        SLIDER_INT("Start Spin", StartSpin, -180, 180);
+                        SLIDER_INT("Start Spin Variation", StartSpinVar, 0, 180);
+                        COLOR_EDIT("Start Color", StartColorR, StartColorG, StartColorB, StartColorA);
+                        SLIDER_FLOAT("Start Color Variation R", StartColorVarR, 0.0f, 1.0f, "%.2f");
+                        SLIDER_FLOAT("Start Color Variation G", StartColorVarG, 0.0f, 1.0f, "%.2f");
+                        SLIDER_FLOAT("Start Color Variation B", StartColorVarB, 0.0f, 1.0f, "%.2f");
+                        SLIDER_FLOAT("Start Color Variation A", StartColorVarA, 0.0f, 1.0f, "%.2f");
+                        SLIDER_INT("End Size", EndSize, 0, 100);
+                        SLIDER_INT("End Size Variation", EndSizeVar, 0, 100);
+                        SLIDER_INT("End Spin", EndSpin, -180, 180);
+                        SLIDER_INT("End Spin Variation", EndSpinVar, 0, 180);
+                        COLOR_EDIT("End Color", EndColorR, EndColorG, EndColorB, EndColorA);
+                        SLIDER_FLOAT("End Color Variation R", EndColorVarR, 0.0f, 1.0f, "%.2f");
+                        SLIDER_FLOAT("End Color Variation G", EndColorVarG, 0.0f, 1.0f, "%.2f");
+                        SLIDER_FLOAT("End Color Variation B", EndColorVarB, 0.0f, 1.0f, "%.2f");
+                        SLIDER_FLOAT("End Color Variation A", EndColorVarA, 0.0f, 1.0f, "%.2f");
+                    }
+                    else if (section == 2) {
+                        // Extra Parameters
+                        SLIDER_FLOAT("Fade In Time", FadeInTime, 0.0f, 10.0f, "%.2f");
+                        SLIDER_FLOAT("Fade In Time Variation", FadeInTimeVar, 0.0f, 10.0f, "%.2f");
+                        SLIDER_FLOAT("Fade Out Time", FadeOutTime, 0.0f, 10.0f, "%.2f");
+                        SLIDER_FLOAT("Fade Out Time Variation", FadeOutTimeVar, 0.0f, 10.0f, "%.2f");
+                        SLIDER_INT("Start Radius", StartRadius, 0, 100);
+                        SLIDER_INT("Start Radius Variation", StartRadiusVar, 0, 100);
+                        SLIDER_INT("End Radius", EndRadius, 0, 100);
+                        SLIDER_INT("End Radius Variation", EndRadiusVar, 0, 100);
+                        SLIDER_INT("Rotation Per Second", RotatePerSecond, -100, 100);
+                        SLIDER_INT("Rotation Variation", RotatePerSecondVar, 0, 100);
+                        SLIDER_INT("Emitter Mode (Gravity/Radius)", EmitterMode, 0, 1);
+                        SLIDER_INT("Position Type (Relative/Grouped)", PositionType, 0, 1);
+                        ImGui::Checkbox("Blend Additive", &particleData->isBlendAdditive) upd;
+                        ImGui::Checkbox("Start Spin Equal To End Spin", &particleData->startSpinEqualToEndSpin) upd;
+                        ImGui::Checkbox("Rotation Is Direction", &particleData->rotationIsDir) upd;
+                        ImGui::Checkbox("Dynamic Rotation Is Direction", &particleData->dynamicRotationIsDir) upd;
+
+                        ImGui::Checkbox("Uniform Color Mode", &particleData->uniformColorMode) upd;
+                        SLIDER_FLOAT("Friction Position", frictionPos, 0.0f, 10.0f, "%.2f");
+                        SLIDER_FLOAT("Friction Position Variation", frictionPosVar, 0.0f, 10.0f, "%.2f");
+                        SLIDER_FLOAT("Respawn", respawn, 0.0f, 10.0f, "%.2f");
+                        SLIDER_FLOAT("Respawn Variation", respawnVar, 0.0f, 10.0f, "%.2f");
+                        ImGui::Checkbox("Order Sensitive", &particleData->orderSensitive) upd;
+                        ImGui::Checkbox("Start Size Equal To End Size", &particleData->startSizeEqualToEndSize) upd;
+                        ImGui::Checkbox("Start Radius Equal To End Radius", &particleData->startRadiusEqualToEndRadius) upd;
+                        ImGui::Checkbox("Start RGB Var Sync", &particleData->startRGBVarSync) upd;
+                        ImGui::Checkbox("End RGB Var Sync", &particleData->endRGBVarSync) upd;
+                        SLIDER_FLOAT("Friction Size", frictionSize, 0.0f, 10.0f, "%.2f");
+                        SLIDER_FLOAT("Friction Size Variation", frictionSizeVar, 0.0f, 10.0f, "%.2f");
+                        SLIDER_FLOAT("Friction Rotation", frictionRot, 0.0f, 10.0f, "%.2f");
+                        SLIDER_FLOAT("Friction Rotation Variation", frictionRotVar, 0.0f, 10.0f, "%.2f");
+
+                        ImGui::InputInt("Custom Particle Index", &particleData->customParticleIdx);
+                        if (ImGui::IsItemEdited() || ImGui::IsItemDeactivatedAfterEdit()) {
+                            particleData->sFrame = fmt::format("particle_{:02d}_001.png", particleData->customParticleIdx);
+                            GameToolbox::particleFromStruct(*particleData, m_particle, 0);
+                        }
+
+                        ImGui::InputText("Sprite Frame (Not Being Saved!)", &particleData->sFrame);
+                        if (ImGui::IsItemEdited() || ImGui::IsItemDeactivatedAfterEdit()) {
+
+                            std::regex pattern(R"(particle_(\d+)_001\.png)");
+                            std::smatch match;
+                            if (std::regex_match(particleData->sFrame, match, pattern)) {
+                                particleData->customParticleIdx = std::stoi(match[1]);
+                            }
+
+                            GameToolbox::particleFromStruct(*particleData, m_particle, 0);
+                        }
+
+                    }
+                    };
+
+#endif
+
+                ImGui::Begin("Params Setup", &m_bVisible, ImGuiWindowFlags_AlwaysAutoResize);
+                ImGui::SetWindowFontScale(1.65f);
+
+                if (ImGui::InputText("##ps-input", &ps)) {
+                    GameToolbox::particleFromString(ps, m_particle, 0);
+                    GameToolbox::particleStringToStruct(ps, *particleData);
+                }
+                if (ImGui::SameLine(); ImGui::Button("Reset")) m_particle->resetSystem();
+                if (ImGui::SameLine(); ImGui::Button("Stop")) m_particle->stopSystem();
+                if (ImGui::SameLine(); ImGui::Button("Resume")) m_particle->resumeSystem();
+
+                if (ImGui::BeginTabBar("Tabs", ImGuiTabBarFlags_None)) {
+                    if (ImGui::BeginTabItem("Motion")) {
+                        renderParticleDataSets(0);
+                        ImGui::EndTabItem();
+                    }
+                    if (ImGui::BeginTabItem("Visual")) {
+                        renderParticleDataSets(1);
+                        ImGui::EndTabItem();
+                    }
+                    if (ImGui::BeginTabItem("Extra")) {
+                        renderParticleDataSets(2);
+                        ImGui::EndTabItem();
+                    }
+                    ImGui::EndTabBar();
+                }
+                ImGui::ScrollWhenDragging();
+                ImGui::End();
+
+                if (!this->isVisible()) return this->onBtn1(this);
+
+#undef SLIDER_INT
+#undef SLIDER_FLOAT
+#undef COLOR_EDIT
+#undef upd
+            }
+        ));
+
+        auto save = findFirstChildRecursive<CCMenuItemSpriteExtra>(this, [](CCNode*) {return true; });
+        save->setPosition(CCPointMake(80.f, 23.f));
+
+        auto saveImage = ButtonSprite::create(
+            "Apply", 80.000f, 1, "bigFont.fnt", "GJ_button_03.png", 0, 0.7f
+        );
+        saveImage->setScale(0.7f);
+        save->setSprite(saveImage);
+
+        return true;
+    }
+
+    static ParticlePopup* create(std::string const& text) {
+        auto ret = new ParticlePopup();
+        if (ret->initAnchored(160.f, 180.f, text, "GJ_square05.png")) {
+            ret->setTitle("Particle Preview");
+            ret->m_noElasticity = 1;
+            ret->autorelease();
+            return ret;
+        }
+
+        delete ret;
+        return nullptr;
     }
 };
 
@@ -285,25 +506,8 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                                 auto editParticle = CCMenuItemExt::createSpriteExtra(
                                     editParticleImage, [popup, menu, restartParticle, resetFileParticle, effectName, id](auto) {
                                         auto data = std::string(findDataNode(menu, "data")->getString());
-                                        auto particle_popup = ParticlePopup::get(data);
+                                        auto particle_popup = ParticlePopup::create(data);
                                         particle_popup->show();
-                                        particle_popup->setZOrder(CCScene::get()->getChildrenCount());
-                                        particle_popup->runAction(/*CCRepeatForever::create*/(CCSequence::create(
-                                            CCDelayTime::create(0.1f),
-                                            CCLambdaAction::create(
-                                                [particle_popup]() {
-                                                    //aaaaaaahhhh fuck this shit so much
-                                                    cocos::setTouchPriority(particle_popup.data(), -506);
-                                                    cocos::findFirstChildRecursive<CCLayer>(
-                                                        particle_popup->m_mainLayer, [](CCLayer* node) {
-                                                            cocos::setTouchPriority(node, -507);
-                                                            return false;
-                                                        }
-                                                    );
-                                                    //log::debug("{}", __FUNCTION__);
-                                                }
-                                            ), nullptr
-                                        )));
                                         auto okBtn = cocos::findFirstChildRecursive<CCMenuItemSpriteExtra>(particle_popup, [](auto) {return true; });
                                         CCMenuItemExt::assignCallback<CCMenuItemSpriteExtra>(
                                             okBtn, [particle_popup, popup, menu, restartParticle, resetFileParticle, effectName, id](auto) {
@@ -328,7 +532,7 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                                                 resetFileParticle->activate();
                                             }
                                         );
-                                        handleTouchPriority(popup, 1);
+                                        //handleTouchPriority(popup, 1);
                                         //handleTouchPriority(menu);
                                     }
                                 );
@@ -479,9 +683,6 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                 createAndAddItem("Burst 2", "burstEffect2");
                 createAndAddItem("Swing Burst", "swingBurstEffect");
 
-                createAndAddItem("Back Center Particles", "playerBackCenterParticles");
-                createAndAddItem("Front Center Particles", "playerFrontCenterParticles");
-
                 createAndAddItem("Explode", "explodeEffect");
                 createAndAddItem("Explode Grav", "explodeEffectGrav");
                 createAndAddItem("Explode Vortex", "explodeEffectVortex");
@@ -524,44 +725,6 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
         this->addChild(menu, 1);
 
         return 1;
-    }
-};
-
-#include <Geode/modify/PlayerObject.hpp>
-class $modify(PlayerObjectParticlesAddon, PlayerObject) {
-    struct Fields {
-        CCParticleSystemQuad* m_backCenter;
-        CCParticleSystemQuad* m_frontCenter;
-    };
-    $override void update(float p0) {
-        PlayerObject::update(p0);
-        if (auto backCenter = m_fields->m_backCenter) {
-            backCenter->setPosition(this->getPosition());
-            backCenter->setZOrder(this->getZOrder() - 1);
-            this->m_isHidden or this->m_isDead ? backCenter->stopSystem() : backCenter->resumeSystem();
-        }
-        if (auto frontCenter = m_fields->m_frontCenter) {
-            frontCenter->setPosition(this->getPosition());
-            frontCenter->setZOrder(this->getZOrder() + 1);
-            this->m_isHidden or this->m_isDead ? frontCenter->stopSystem() : frontCenter->resumeSystem();
-        }
-    }
-    $override bool init(int p0, int p1, GJBaseGameLayer * p2, cocos2d::CCLayer * p3, bool p4) {
-        if (!PlayerObject::init(p0, p1, p2, p3, p4)) return false;
-
-        if (auto playerBackCenterParticles = CCParticleSystemQuad::create("playerBackCenterParticles.plist", 0)) {
-            m_fields->m_backCenter = playerBackCenterParticles;
-            m_fields->m_backCenter->setID(this->getID() + "-back-center-particles"_spr);
-            if (this->m_parentLayer) this->m_parentLayer->addChild(m_fields->m_backCenter, this->getZOrder() - 1);
-        };
-
-        if (auto playerFrontCenterParticles = CCParticleSystemQuad::create("playerFrontCenterParticles.plist", 0)) {
-            m_fields->m_frontCenter = playerFrontCenterParticles;
-            m_fields->m_frontCenter->setID(this->getID() + "-back-center-particles"_spr);
-            if (this->m_parentLayer) this->m_parentLayer->addChild(m_fields->m_frontCenter, this->getZOrder() + 1);
-        };
-
-        return true;
     }
 };
 
