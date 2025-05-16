@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
-project(CubesSlasher VERSION 1.0.0)
+project(main)
 
 include_directories(src)
 add_library(${PROJECT_NAME} SHARED
@@ -17,15 +17,6 @@ if (NOT DEFINED ENV{GEODE_SDK})
 else()
     message(STATUS "Found Geode: $ENV{GEODE_SDK}")
 endif()
-
-# my bindings... https://github.com/user95401/bindings
-include("$ENV{GEODE_SDK}/cmake/CPM.cmake")
-CPMAddPackage(NAME "bindings"
-	GITHUB_REPOSITORY "user95401/bindings"
-	GIT_TAG "main"
-	DOWNLOAD_ONLY YES
-	NO_CACHE YES
-)
 
 set(GEODE_BINDINGS_REPO_PATH ${bindings_SOURCE_DIR})
 

@@ -20,52 +20,61 @@ public:
 
     bool setup(std::string const& value) override {
         this->setOpacity(210);
-        m_mainLayer->setPositionX(m_mainLayer->getPositionX() + 110.f);
-        m_mainLayer->getChildByType<CCScale9Sprite>(0)->setVisible(0);
-
-        auto bg = CCSprite::create("game_bg_01_001.png");
-        bg->setBlendFunc({ GL_ONE, GL_ONE });
-        bg->setColor(ccc3(34, 34, 34));
-        bg->setFlipY(true);
-        bg->setScale(0.375f);
-        bg->setPosition(CCPointMake(80.f, 90.f));
-        m_mainLayer->addChild(bg, -1, 1337);
 
         m_particle = CCParticleSystemQuad::create();
-        GameToolbox::particleFromString(value, m_particle, 0);
+        GameToolbox::particleFromString(value.c_str(), m_particle, 0);
         m_mainLayer->addChildAtPosition(m_particle, Anchor::Center);
 
-        auto scroll = ScrollLayer::create(this->getContentSize());
-        m_mainLayer->removeFromParentAndCleanup(0);
-        scroll->m_contentLayer->addChild(m_mainLayer);
-        scroll->m_disableHorizontal = 0;
-        scroll->m_disableVertical = 0;
-        scroll->m_scrollLimitTop = 1110;
-        scroll->m_scrollLimitBottom = 1110;
-        this->addChild(scroll);
-
         particleData = new ParticleStruct;
-        GameToolbox::particleStringToStruct(value, *particleData);
-        ps = GameToolbox::saveParticleToString(m_particle);
+        GameToolbox::particleStringToStruct(value.c_str(), *particleData);
+        ps = GameToolbox::saveParticleToString(m_particle).c_str();
 
-        this->addChild(ImGuiDrawNode::create(
-            [this]() {
+        auto save = findFirstChildRecursive<CCMenuItemSpriteExtra>(this, [](CCNode*) {return true; });
+
+        auto size = this->getContentSize();
+        Ref renderTexFlipped = CCRenderTexture::create(size.width, size.height);
+        Ref renderTex = CCRenderTexture::create(size.width, size.height);
+        this->runAction(CCRepeatForever::create(CCSpawn::create(CallFuncExt::create(
+            [this, renderTexFlipped, renderTex] {
+                this->m_mainLayer->setVisible(1);
+                renderTexFlipped->beginWithClear(0, 0, 0, 0);
+                this->m_mainLayer->visit();
+                renderTexFlipped->end();
+                this->m_mainLayer->setVisible(0);
+
+                renderTexFlipped->getSprite()->setScaleY(1.f);
+                renderTexFlipped->getSprite()->setAnchorPoint(CCPointZero);
+                renderTex->beginWithClear(0, 0, 0, 0);
+                renderTexFlipped->getSprite()->visit();
+                renderTex->end();
+            }
+        ), nullptr)));
+        this->m_mainLayer->setPosition({ 160.f, 150.f });
+        this->m_mainLayer->setScale(4.f);
+        this->m_mainLayer->setVisible(0);
+
+        ImGuiCocosExt::m_drawings[this] = (
+            [this, save, renderTex]() {
 
 #if 1
 
 #define upd ; if (ImGui::IsItemEdited() || ImGui::IsItemDeactivatedAfterEdit()) { GameToolbox::particleFromStruct(*particleData, m_particle, 0); ps = GameToolbox::saveParticleToString(m_particle);  };
 
 #define SLIDER_INT(label, var, min, max) \
+    ImGui::BeginGroup(); \
     ImGui::Text(label); \
     ImGui::SliderInt("##" label "Slider", &particleData->var, min, max, "%d", ImGuiSliderFlags_AlwaysClamp) upd; \
     ImGui::SameLine(); \
-    ImGui::InputInt("##" label "Input", &particleData->var) upd;
+    ImGui::InputInt("##" label "Input", &particleData->var) upd; \
+    ImGui::EndGroup(); \
 
 #define SLIDER_FLOAT(label, var, min, max, format) \
+    ImGui::BeginGroup(); \
     ImGui::Text(label); \
     ImGui::SliderFloat("##" label "Slider", &particleData->var, min, max, format, ImGuiSliderFlags_AlwaysClamp) upd; \
     ImGui::SameLine(); \
-    ImGui::InputFloat("##" label "Input", &particleData->var, 0.1f, 1.0f, format) upd;
+    ImGui::InputFloat("##" label "Input", &particleData->var, 0.1f, 1.0f, format) upd; \
+    ImGui::EndGroup(); \
 
 
 #define COLOR_EDIT(label, r, g, b, a) \
@@ -160,13 +169,13 @@ public:
                             GameToolbox::particleFromStruct(*particleData, m_particle, 0);
                         }
 
-                        auto particleData_sFrame = std::string(particleData->sFrame.data());
+                        auto particleData_sFrame = std::string(particleData->sFrame.c_str());
                         ImGui::InputText("Sprite Frame (Not Being Saved!)", &particleData_sFrame);
                         if (ImGui::IsItemEdited() || ImGui::IsItemDeactivatedAfterEdit()) {
                             particleData->sFrame = particleData_sFrame;
                             std::regex pattern(R"(particle_(\d+)_001\.png)");
                             std::smatch match;
-                            auto fuckyou = std::string(particleData->sFrame.data());
+                            auto fuckyou = std::string(particleData->sFrame.c_str());
                             if (std::regex_match(fuckyou, match, pattern)) {
                                 particleData->customParticleIdx = std::stoi(match[1]);
                             }
@@ -179,12 +188,16 @@ public:
 
 #endif
 
-                ImGui::Begin("Params Setup", &m_bVisible, ImGuiWindowFlags_AlwaysAutoResize);
+                ImGui::Begin("Params Setup", &m_bVisible, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
                 ImGui::SetWindowFontScale(1.65f);
 
-                auto str_ps = std::string(ps.data());
+                auto offst = ImVec2(220, 120);
+                ImGui::SetWindowSize(ImGui::GetMainViewport()->Size - offst);
+                ImGui::SetWindowPos(offst/2);
+
+                auto str_ps = std::string(ps.c_str());
                 if (ImGui::InputText("##ps-input", &str_ps)) {
-                    ps = str_ps.data();
+                    ps = str_ps.c_str();
                     GameToolbox::particleFromString(ps, m_particle, 0);
                     GameToolbox::particleStringToStruct(ps, *particleData);
                 }
@@ -192,24 +205,63 @@ public:
                 if (ImGui::SameLine(); ImGui::Button("Stop")) m_particle->stopSystem();
                 if (ImGui::SameLine(); ImGui::Button("Resume")) m_particle->resumeSystem();
 
-                if (ImGui::BeginTabBar("Tabs", ImGuiTabBarFlags_None)) {
-                    if (ImGui::BeginTabItem("Motion")) {
-                        renderParticleDataSets(0);
-                        ImGui::EndTabItem();
+                if (ImGui::BeginChild("asdwert")) {
+
+                    if (ImGui::BeginChild("ShowcaseChild", { 320, 400 })) {
+                        GLuint glTexID = renderTex->m_pTexture->getName();
+                        auto sz = renderTex->m_pTexture->getContentSize();
+                        if (glTexID) ImGui::Image(
+                            (ImTextureID)(intptr_t)glTexID,
+                            { sz.width, sz.height }
+                        );
+                        bool hovered = ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+                        bool held = ImGui::IsMouseDown(0);
+                        if (hovered && held) {
+                            ImGui::SetItemAllowOverlap();
+                            ImGui::SetActiveID(ImGui::GetItemID(), ImGui::GetCurrentWindow());
+                            auto mdt = ImGui::GetIO().MouseDelta / m_mainLayer->getScale();
+                            m_particle->setPosition(
+                                m_particle->getPositionX() + mdt.x,
+                                m_particle->getPositionY() + -mdt.y
+                            );
+                        };
+                        ImGui::SetWindowFontScale(2.0f);
+                        if (ImGui::Button("Save", ImVec2(-FLT_MIN, -FLT_MIN))) 
+                            if (save) save->activate();
                     }
-                    if (ImGui::BeginTabItem("Visual")) {
-                        renderParticleDataSets(1);
-                        ImGui::EndTabItem();
+                    ImGui::EndChild();
+
+                    ImGui::SameLine();
+
+                    ImGui::BeginChild("TabsChild", ImVec2(ImGui::GetWindowSize().x - 325, 0));
+                    ImGui::PushItemWidth(320);
+                    ImGui::SetWindowFontScale(2.f);
+                    if (ImGui::BeginTabBar("Tabs", ImGuiTabBarFlags_None)) {
+                        if (ImGui::BeginTabItem("Motion")) {
+                            renderParticleDataSets(0);
+                            ImGui::EndTabItem();
+                        }
+                        if (ImGui::BeginTabItem("Visual")) {
+                            renderParticleDataSets(1);
+                            ImGui::EndTabItem();
+                        }
+                        if (ImGui::BeginTabItem("Extra")) {
+                            renderParticleDataSets(2);
+                            ImGui::EndTabItem();
+                        }
+                        ImGui::EndTabBar();
                     }
-                    if (ImGui::BeginTabItem("Extra")) {
-                        renderParticleDataSets(2);
-                        ImGui::EndTabItem();
-                    }
-                    ImGui::EndTabBar();
-                }
+                    ImGui::ScrollWhenDragging();
+                    ImGui::PopItemWidth();
+                    ImGui::EndChild();
+
+                };
+                ImGui::EndChild();
+
                 ImGui::ScrollWhenDragging();
                 ImGui::End();
 
+                //use of this->m_bVisible in ImGui::Begin
                 if (!this->isVisible()) return this->onBtn1(this);
 
 #undef SLIDER_INT
@@ -217,16 +269,7 @@ public:
 #undef COLOR_EDIT
 #undef upd
             }
-        ));
-
-        auto save = findFirstChildRecursive<CCMenuItemSpriteExtra>(this, [](CCNode*) {return true; });
-        save->setPosition(CCPointMake(80.f, 23.f));
-
-        auto saveImage = ButtonSprite::create(
-            "Apply", 80.000f, 1, "bigFont.fnt", "GJ_button_03.png", 0, 0.7f
         );
-        saveImage->setScale(0.7f);
-        save->setSprite(saveImage);
 
         return true;
     }
@@ -234,7 +277,6 @@ public:
     static ParticlePopup* create(std::string const& text) {
         auto ret = new ParticlePopup();
         if (ret->initAnchored(160.f, 180.f, text, "GJ_square05.png")) {
-            ret->setTitle("Particle Preview");
             ret->m_noElasticity = 1;
             ret->autorelease();
             return ret;

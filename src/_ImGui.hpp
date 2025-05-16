@@ -7,6 +7,8 @@
 
 using namespace cocos2d;
 
+/*lot of imgui helpers*/ #if 1
+
 static std::ostream& operator<<(std::ostream& stream, ImVec2 const& vec) {
     return stream << vec.x << ", " << vec.y;
 }
@@ -95,6 +97,9 @@ static CCPoint toCocos(const ImVec2& pos) {
     );
 };
 
+
+#endif
+
 namespace ImGui {
     inline void ScrollWhenDragging() {
         auto mouse_dt = ImGui::GetIO().MouseDelta;
@@ -117,30 +122,17 @@ namespace ImGui {
     }
 }
 
-class ImGuiDrawNode : public CCNode {
-public:
-    static inline std::set<ImGuiDrawNode*> DrawNodes;
-    
-    std::function<void()> m_drawFunc;
-
-    static ImGuiDrawNode* create(std::function<void()> drawFunc) {
-        ImGuiDrawNode* pRet = new ImGuiDrawNode();
-        if (pRet && pRet->init()) {
-            pRet->autorelease();
-            pRet->m_drawFunc = (drawFunc);
-            DrawNodes.insert(pRet);
-            return pRet;
-        }
-        else {
-            delete pRet; pRet = 0; return 0;
-        }
-    };
-
-};
-
 #include <imgui-cocos.hpp>
 #include <Geode/modify/CCDirector.hpp>
-class $modify(ImGuiMain, CCDirector) {
+class $modify(ImGuiCocosExt, CCDirector) {
+
+    //running holder node and function to call on draw aslong as node running
+    inline static std::map<geode::Ref<cocos2d::CCNode>, std::function<void()>> m_drawings;
+
+    static void registerDrawingForNode(cocos2d::CCNode * node, std::function<void()> callback) {
+        if (node && callback) m_drawings[node] = std::move(callback);
+    }
+
     $override void runWithScene(CCScene * pScene) {
         CCDirector::runWithScene(pScene);
         ImGuiCocos::get().setup(
@@ -169,17 +161,23 @@ class $modify(ImGuiMain, CCDirector) {
         ).draw(
             [] {
 
-                auto* kb = CCDirector::sharedDirector()->getKeyboardDispatcher();
-                ImGui::GetIO().KeyAlt = kb->getAltKeyPressed() || kb->getCommandKeyPressed(); // look
-                ImGui::GetIO().KeyCtrl = kb->getControlKeyPressed();
-                ImGui::GetIO().KeyShift = kb->getShiftKeyPressed();
+                if (auto* kb = cocos2d::CCDirector::sharedDirector()->getKeyboardDispatcher()) {
+                    auto& io = ImGui::GetIO();
+                    io.AddKeyEvent(ImGuiKey_ModAlt, kb->getAltKeyPressed() || kb->getCommandKeyPressed());
+                    io.AddKeyEvent(ImGuiKey_ModCtrl, kb->getControlKeyPressed());
+                    io.AddKeyEvent(ImGuiKey_ModShift, kb->getShiftKeyPressed());
+                }
 
-                for (auto aDrawNode : ImGuiDrawNode::DrawNodes)
-                    if (aDrawNode and aDrawNode->isRunning() and aDrawNode->m_drawFunc) aDrawNode->m_drawFunc();
-                    else {
-                        ImGuiDrawNode::DrawNodes.erase(aDrawNode);
-                        aDrawNode->removeFromParent();
+                for (auto it = m_drawings.begin(); it != m_drawings.end();) {
+                    auto& [node, callback] = *it;
+                    if (!node || !node->isRunning()) {
+                        it = m_drawings.erase(it);
                     }
+                    else {
+                        callback();
+                        ++it;
+                    }
+                }
 
             }
         );
