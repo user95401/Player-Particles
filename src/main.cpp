@@ -128,6 +128,7 @@ public:
     ImGui::EndGroup(); \
 
                 auto renderParticleDataSets = [this](int section) {
+                    ImGui::BeginChild(fmt::format("tabsub{}", section).c_str());
                     if (section == 0) {
                         // Motion Parameters
                         SLIDER_INT("Max Particles", TotalParticles, 0, 1000);
@@ -302,6 +303,7 @@ public:
                         }
 
                     }
+                    ImGui::EndChild();
                     };
 
 #endif
@@ -365,7 +367,8 @@ public:
                             if (save) save->activate();
                         ImGui::BeginDisabled();
                         std::string ctrl_inf = 
-                            """" "- Hold and move to drag particle"
+                            """" "Preview area controls:"
+                            "\n" "- Hold and move to drag particle"
                             "\n" "- Scroll mouse wheel to change scale"
                             "\n" "- Double click to reset system (restart)"
                             ;
@@ -603,7 +606,7 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                                 restartParticleImage->m_BGSprite->setContentWidth(184.000f);
                                 restartParticleImage->m_BGSprite->setContentHeight(32.000f);
                                 auto restartParticle = CCMenuItemExt::createSpriteExtra(
-                                    restartParticleImage, [popup, menu](auto) {
+                                    restartParticleImage, [popup, menu](CCNode*) {
                                         menu->removeChildByTag(13384);
                                         auto data = std::string(findDataNode(menu, "data")->getString());
                                         auto selectedPrev = ParticlePreview::createFromString(data);
@@ -624,7 +627,7 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                                 auto copyParticleStrLabel = CCLabelBMFont::create("- copy string -", "chatFont.fnt");
                                 copyParticleStrLabel->setScale(0.6);
                                 auto copyParticleStr = CCMenuItemExt::createSpriteExtra(
-                                    copyParticleStrLabel, [menu, restartParticle, resetFileParticle, effectName, id](auto) {
+                                    copyParticleStrLabel, [menu, restartParticle, resetFileParticle, effectName, id](CCNode*) {
                                         auto data = std::string(findDataNode(menu, "data")->getString());
                                         geode::utils::clipboard::write(data);
                                         auto ntfy = Notification::create("particle string was wrote to clipboard!");
@@ -641,7 +644,7 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                                 useParticleImage->m_BGSprite->setContentWidth(184.000f);
                                 useParticleImage->m_BGSprite->setContentHeight(32.000f);
                                 auto useParticle = CCMenuItemExt::createSpriteExtra(
-                                    useParticleImage, [menu, restartParticle, resetFileParticle, effectName](auto) {
+                                    useParticleImage, [menu, restartParticle, resetFileParticle, effectName](CCNode*) {
                                         auto data = std::string(findDataNode(menu, "data")->getString());
                                         Mod::get()->setSavedValue<std::string>(effectName, data);
                                         Mod::get()->saveData();
@@ -659,7 +662,7 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                                 deleteParticleImage->m_BGSprite->setContentWidth(184.000f / 1.8f);
                                 deleteParticleImage->m_BGSprite->setContentHeight(32.000f);
                                 auto deleteParticle = CCMenuItemExt::createSpriteExtra(
-                                    deleteParticleImage, [menu, scroll, resetFileParticle, effectName, id](auto) {
+                                    deleteParticleImage, [menu, scroll, resetFileParticle, effectName, id](CCNode*) {
 
                                         auto data = std::string(findDataNode(menu, "data")->getString());
                                         auto arr = Mod::get()->getSavedValue<matjson::Value>(effectName + ".saved").asArray().unwrapOrDefault();
@@ -693,13 +696,13 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                                 editParticleImage->m_BGSprite->setContentWidth(184.000f / 2.5f);
                                 editParticleImage->m_BGSprite->setContentHeight(32.000f);
                                 auto editParticle = CCMenuItemExt::createSpriteExtra(
-                                    editParticleImage, [popup, menu, restartParticle, resetFileParticle, effectName, id](auto) {
+                                    editParticleImage, [popup, menu, restartParticle, resetFileParticle, effectName, id](CCNode*) {
                                         auto data = std::string(findDataNode(menu, "data")->getString());
                                         auto particle_popup = ParticlePopup::create(data);
                                         particle_popup->show();
-                                        auto okBtn = cocos::findFirstChildRecursive<CCMenuItemSpriteExtra>(particle_popup, [](auto) {return true; });
+                                        auto okBtn = cocos::findFirstChildRecursive<CCMenuItemSpriteExtra>(particle_popup, [](CCNode*) {return true; });
                                         CCMenuItemExt::assignCallback<CCMenuItemSpriteExtra>(
-                                            okBtn, [particle_popup, popup, menu, restartParticle, resetFileParticle, effectName, id](auto) {
+                                            okBtn, [particle_popup, popup, menu, restartParticle, resetFileParticle, effectName, id](CCNode*) {
                                                 findDataNode(menu, "data")->setString(
                                                     GameToolbox::saveParticleToString(particle_popup->m_particle).c_str()
                                                 );
@@ -743,7 +746,7 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                         );
                         createnewImage->setScale(0.7f);
                         auto createnew = CCMenuItemExt::createSpriteExtra(
-                            createnewImage, [popup, effectName, scroll, createParticleCard](auto) {
+                            createnewImage, [popup, effectName, scroll, createParticleCard](CCNode*) {
 
                                 auto arr = Mod::get()->getSavedValue<matjson::Value>(effectName + ".saved").asArray().unwrapOrDefault();
                                     
@@ -785,7 +788,7 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
                         );
                         createFromStringImage->setScale(0.7f);
                         auto createFromString = CCMenuItemExt::createSpriteExtra(
-                            createFromStringImage, [popup, inputParticleStr, effectName, scroll, createParticleCard](auto) {
+                            createFromStringImage, [popup, inputParticleStr, effectName, scroll, createParticleCard](CCNode*) {
 
                                 auto arr = Mod::get()->getSavedValue<matjson::Value>(effectName + ".saved").asArray().unwrapOrDefault();
 
@@ -919,43 +922,48 @@ class $modify(GJGarageLayerCustomPlayerParticles, GJGarageLayer) {
 
 #include <Geode/modify/CCParticleSystemQuad.hpp>
 class $modify(CCParticleSystemQuadCustomPlayerParticles, CCParticleSystemQuad) {
-    void customUpdate(float dt = 1337.f) {
+    static void runEnforcer(CCParticleSystemQuad * particle, std::string initstr) {
 
-        if (this == nullptr) return; //fuck this
-        if (!typeinfo_cast<CCParticleSystemQuad*>(this)) return; //hi
+        if (particle == nullptr) return; //fuck this
+        if (!typeinfo_cast<CCParticleSystemQuad*>(particle)) return; //hi
 
-        if (dt == 1337.f) {
-            this->schedule(
-                schedule_selector(CCParticleSystemQuadCustomPlayerParticles::customUpdate)
-            );
-            //initial_str
-            auto original = GameToolbox::particleFromString(
-                GameToolbox::saveParticleToString(this), nullptr, 0
-            );
-            original->setVisible(0);
-            original->setID("original"_spr);
-            this->addChild(original);
-        }
-        if (dt == 1337.f) return; //asd
+        auto fGrv = getMod()->getSettingValue<bool>("Force Initial Gravity");
+        auto fCol = getMod()->getSettingValue<bool>("Force Initial Colors");
+        auto fPos = getMod()->getSettingValue<bool>("Force Initial Position Var");
+        auto fPtp = getMod()->getSettingValue<bool>("Force Initial Position Type");
 
-        if (auto original = typeinfo_cast<CCParticleSystemQuad*>(this->getChildByID("original"_spr))) {
-            if (getMod()->getSettingValue<bool>("Force initial Gravity")) {
-                this->setGravity(original->getGravity());
+        if (!fGrv and !fCol and !fPos and !fPtp) return;
+
+        auto org = GameToolbox::particleFromString(
+            initstr, CCParticleSystemQuad::create(), 0
+        );
+        particle->setUserObject(org);
+
+        particle->runAction(CCRepeatForever::create(CCSpawn::create(CallFuncExt::create(
+            [particle, org, fGrv, fCol, fPos, fPtp] {
+                if (particle == nullptr) return; //fuck this
+                if (!typeinfo_cast<CCParticleSystemQuad*>(particle)) return; //hi
+
+                if (fGrv) {
+                    particle->setGravity(org->getGravity());
+                }
+                if (fCol) {
+                    particle->setStartColor(org->getStartColor());
+                    particle->setStartColorVar(org->getStartColorVar());
+                    particle->setEndColor(org->getEndColor());
+                    particle->setEndColorVar(org->getEndColorVar());
+                }
+                if (fPos) {
+                    particle->setPosVar(org->getPosVar());
+                }
+                if (fPtp) {
+                    particle->setPositionType(org->getPositionType());
+                }
             }
-            if (getMod()->getSettingValue<bool>("Force initial Colors")) {
-                this->setStartColor(original->getStartColor());
-                this->setStartColorVar(original->getStartColorVar());
-                this->setEndColor(original->getEndColor());
-                this->setEndColorVar(original->getEndColorVar());
-            }
-            if (getMod()->getSettingValue<bool>("Force initial Positioning")) {
-                this->setPosVar(original->getPosVar());
-                this->setPositionType(original->getPositionType());
-            }
-        }
+        ), nullptr)));
 
     }
-    static void updateImage(CCParticleSystemQuad* particle, const char* effectFile) {
+    static void updateImage(CCParticleSystemQuad * particle, const char* effectFile) {
         auto effectName = fs::path(effectFile).filename().replace_extension("").string();
         auto particleImageFileName = effectName + ".png";
         if (fileExistsInSearchPaths(particleImageFileName.c_str())) {
@@ -965,7 +973,7 @@ class $modify(CCParticleSystemQuadCustomPlayerParticles, CCParticleSystemQuad) {
     }
     $override static CCParticleSystemQuad* create(const char* file, bool idk) {
 
-        if (string::contains(file, "!original")) return CCParticleSystemQuad::create(
+        if (string::endsWith(file, "!original")) return CCParticleSystemQuad::create(
             string::replace(file, "!original", "").c_str(), idk
         );
 
@@ -975,10 +983,12 @@ class $modify(CCParticleSystemQuadCustomPlayerParticles, CCParticleSystemQuad) {
 
         auto stringDataFileName = effectName + ".txt";
         if (fileExistsInSearchPaths(stringDataFileName.c_str())) {
-            //fs::read uses CCFileUtils::getFileData
-            auto data = fs::read(stringDataFileName.c_str());
-            auto rtn = GameToolbox::particleFromString(data, CCParticleSystemQuad::create(), idk);
-            reinterpret_cast<CCParticleSystemQuadCustomPlayerParticles*>(rtn)->customUpdate();
+            auto read = file::readString(stringDataFileName.c_str());
+            auto rtn = read.isOk() ? GameToolbox::particleFromString(
+                read.unwrapOrDefault(), CCParticleSystemQuad::create(), idk
+            ) : orgone;//!isOk read
+            if (read.err()) log::error("error reading \"{}\", {}", stringDataFileName, read.err());
+            runEnforcer(rtn, read.unwrapOrDefault());
             updateImage(rtn, file);
             return rtn;
         }
@@ -986,11 +996,9 @@ class $modify(CCParticleSystemQuadCustomPlayerParticles, CCParticleSystemQuad) {
         auto saves = Mod::get()->getSaveContainer();
         if (saves.contains(effectName)) {
             auto saves_effect = saves.get(effectName);
-            auto rtn = GameToolbox::particleFromString(
-                saves_effect.isOk() ? saves_effect.unwrap().asString().unwrapOr("asd") : defaultEffect(effectName),
-                CCParticleSystemQuad::create(), idk
-            );
-            reinterpret_cast<CCParticleSystemQuadCustomPlayerParticles*>(rtn)->customUpdate();
+            auto str = saves_effect.isOk() ? saves_effect.unwrap().asString().unwrapOr("") : defaultEffect(effectName);
+            auto rtn = GameToolbox::particleFromString(str, CCParticleSystemQuad::create(), idk);
+            runEnforcer(rtn, str);
             updateImage(rtn, file);
             return rtn;
         }

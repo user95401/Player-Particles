@@ -142,6 +142,7 @@ class $modify(ImGuiCocosExt, CCDirector) {
                 io.FontAllowUserScaling = true;
                 io.ConfigDragClickToInputText = true;
                 io.ConfigScrollbarScrollByPage = true;
+                io.MouseDoubleClickTime = 1.0f;
                 io.ConfigFlags |= ImGuiConfigFlags_IsTouchScreen;
                 GEODE_MACOS(io.ConfigMacOSXBehaviors = true);
 
@@ -185,4 +186,5 @@ class $modify(ImGuiCocosExt, CCDirector) {
             }
         );
     };
+
 };
