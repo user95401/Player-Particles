@@ -56,7 +56,7 @@ public:
 
         ImGuiCocosExt::m_drawings[this] = (
             [this, save, renderTex]() {
-ImGui::GetIO().MouseDrawCursor = true;
+
 #if 1
 
 #define upd ; if (ImGui::IsItemEdited() || ImGui::IsItemDeactivatedAfterEdit()) { GameToolbox::particleFromStruct(*particleData, m_particle, 0); ps = GameToolbox::saveParticleToString(m_particle);  };
