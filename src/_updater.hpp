@@ -77,7 +77,7 @@ inline auto doWithConfirmPop(auto lb = []() {}) {
 }
 
 #include <Geode/modify/MenuLayer.hpp>
-class $modify(MenuLayerExt, MenuLayer) {
+class $modify(MenuLayerUpdaterExt, MenuLayer) {
     struct Fields {
         EventListener<web::WebTask> m_getJsonListener;
     };

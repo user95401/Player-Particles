@@ -20,6 +20,7 @@ public:
 
     bool setup(std::string const& value) override {
         this->setOpacity(210);
+        this->m_bgSprite->setColor({ 42, 42, 42 });
 
         m_particle = CCParticleSystemQuad::create();
         GameToolbox::particleFromString(value.c_str(), m_particle, 0);
@@ -59,25 +60,62 @@ public:
 #if 1
 
 #define upd ; if (ImGui::IsItemEdited() || ImGui::IsItemDeactivatedAfterEdit()) { GameToolbox::particleFromStruct(*particleData, m_particle, 0); ps = GameToolbox::saveParticleToString(m_particle);  };
-
+#define iw1 (160.f * ImGui::GetIO().FontGlobalScale)
+#define iw2 (360.f * ImGui::GetIO().FontGlobalScale)
 #define SLIDER_INT(label, var, min, max) \
     ImGui::BeginGroup(); \
-    ImGui::Text(label); \
-    ImGui::SliderInt("##" label "Slider", &particleData->var, min, max, "%d", ImGuiSliderFlags_AlwaysClamp) upd; \
+     \
+    ImGui::SetNextItemWidth(0.f); \
+    ImGui::BeginGroup(); \
+    ImGui::InputFloat("##" label "InputDummy", &particleData->Life); \
+    ImGui::EndGroup(); \
+     \
     ImGui::SameLine(); \
+     \
+    ImGui::BeginGroup(); \
+    ImGui::Text(label); \
+    ImGui::SetNextItemWidth(iw1); \
     ImGui::InputInt("##" label "Input", &particleData->var) upd; \
+    ImGui::SameLine(); \
+    ImGui::SetNextItemWidth(iw2); \
+    ImGui::SliderInt("##" label "Slider", &particleData->var, min, max, "%d", ImGuiSliderFlags_AlwaysClamp) upd; \
+    ImGui::EndGroup(); \
+     \
     ImGui::EndGroup(); \
 
 #define SLIDER_FLOAT(label, var, min, max, format) \
     ImGui::BeginGroup(); \
-    ImGui::Text(label); \
-    ImGui::SliderFloat("##" label "Slider", &particleData->var, min, max, format, ImGuiSliderFlags_AlwaysClamp) upd; \
+     \
+    ImGui::SetNextItemWidth(0.f); \
+    ImGui::BeginGroup(); \
+    ImGui::InputFloat("##" label "InputDummy", &particleData->Life); \
+    ImGui::EndGroup(); \
+     \
     ImGui::SameLine(); \
+     \
+    ImGui::BeginGroup(); \
+    ImGui::Text(label); \
+    ImGui::SetNextItemWidth(iw1); \
     ImGui::InputFloat("##" label "Input", &particleData->var, 0.1f, 1.0f, format) upd; \
+    ImGui::SameLine(); \
+    ImGui::SetNextItemWidth(iw2); \
+    ImGui::SliderFloat("##" label "Slider", &particleData->var, min, max, format, ImGuiSliderFlags_AlwaysClamp) upd; \
+    ImGui::EndGroup(); \
+     \
     ImGui::EndGroup(); \
 
 
 #define COLOR_EDIT(label, r, g, b, a) \
+    ImGui::BeginGroup(); \
+     \
+    ImGui::SetNextItemWidth(0.001f); \
+    ImGui::BeginGroup(); \
+    ImGui::InputFloat("##" label "InputDummy", &particleData->Life); \
+    ImGui::EndGroup(); \
+     \
+    ImGui::SameLine(); \
+     \
+    ImGui::SetNextItemWidth(iw2); \
     {float color[4] = { particleData->r, particleData->g, particleData->b, particleData->a }; \
     if (ImGui::ColorEdit4(label, color, ImGuiColorEditFlags_None)) { \
         particleData->r = color[0]; \
@@ -85,83 +123,163 @@ public:
         particleData->b = color[2]; \
         particleData->a = color[3]; \
         GameToolbox::particleFromStruct(*particleData, m_particle, 0); \
-    }}
+    }} \
+                \
+    ImGui::EndGroup(); \
 
                 auto renderParticleDataSets = [this](int section) {
                     if (section == 0) {
                         // Motion Parameters
                         SLIDER_INT("Max Particles", TotalParticles, 0, 1000);
                         SLIDER_FLOAT("Duration", Duration, -10.0f, 10.0f, "%.2f");
+
+                        ImGui::BeginGroup();
                         SLIDER_FLOAT("Lifetime", Life, 0.0f, 10.0f, "%.2f");
+                        ImGui::SameLine();
                         SLIDER_FLOAT("Lifetime Variation", LifeVar, 0.0f, 10.0f, "%.2f");
+                        ImGui::EndGroup();
+
                         SLIDER_INT("Emission", EmissionRate, 0, 1000);
+
+                        ImGui::BeginGroup();
                         SLIDER_INT("Angle", Angle, -180, 180);
+                        ImGui::SameLine();
                         SLIDER_INT("Angle Variation", AngleVar, 0, 180);
+                        ImGui::EndGroup();
+
+                        ImGui::BeginGroup();
                         SLIDER_INT("Speed", Speed, 0, 100);
+                        ImGui::SameLine();
                         SLIDER_INT("Speed Variation", SpeedVar, 0, 100);
+                        ImGui::EndGroup();
+
+                        ImGui::BeginGroup();
                         SLIDER_INT("Position Variation X", PosVarX, 0, 100);
+                        ImGui::SameLine();
                         SLIDER_INT("Position Variation Y", PosVarY, 0, 100);
+                        ImGui::EndGroup();
+
+                        ImGui::BeginGroup();
                         SLIDER_INT("Gravity X", GravityX, -100, 100);
+                        ImGui::SameLine();
                         SLIDER_INT("Gravity Y", GravityY, -100, 100);
+                        ImGui::EndGroup();
+
+                        ImGui::BeginGroup();
                         SLIDER_INT("Radial Acceleration", RadialAccel, -100, 100);
+                        ImGui::SameLine();
                         SLIDER_INT("Radial Variation", RadialAccelVar, 0, 100);
+                        ImGui::EndGroup();
+
+                        ImGui::BeginGroup();
                         SLIDER_INT("Tangential Acceleration", TangentialAccel, -100, 100);
+                        ImGui::SameLine();
                         SLIDER_INT("Tangential Variation", TangentialAccelVar, 0, 100);
+                        ImGui::EndGroup();
                     }
                     else if (section == 1) {
                         // Visual Parameters
+                        ImGui::BeginGroup();
                         SLIDER_INT("Start Size", StartSize, 0, 100);
+                        ImGui::SameLine();
                         SLIDER_INT("Start Size Variation", StartSizeVar, 0, 100);
+                        ImGui::EndGroup();
+
+                        ImGui::BeginGroup();
                         SLIDER_INT("Start Spin", StartSpin, -180, 180);
+                        ImGui::SameLine();
                         SLIDER_INT("Start Spin Variation", StartSpinVar, 0, 180);
+                        ImGui::EndGroup();
+
                         COLOR_EDIT("Start Color", StartColorR, StartColorG, StartColorB, StartColorA);
-                        SLIDER_FLOAT("Start Color Variation R", StartColorVarR, 0.0f, 1.0f, "%.2f");
-                        SLIDER_FLOAT("Start Color Variation G", StartColorVarG, 0.0f, 1.0f, "%.2f");
-                        SLIDER_FLOAT("Start Color Variation B", StartColorVarB, 0.0f, 1.0f, "%.2f");
-                        SLIDER_FLOAT("Start Color Variation A", StartColorVarA, 0.0f, 1.0f, "%.2f");
+                        COLOR_EDIT("Start Color Variation", StartColorVarR, StartColorVarG, StartColorVarB, StartColorVarA);
+
+                        ImGui::BeginGroup();
                         SLIDER_INT("End Size", EndSize, 0, 100);
+                        ImGui::SameLine();
                         SLIDER_INT("End Size Variation", EndSizeVar, 0, 100);
+                        ImGui::EndGroup();
+
+                        ImGui::BeginGroup();
                         SLIDER_INT("End Spin", EndSpin, -180, 180);
+                        ImGui::SameLine();
                         SLIDER_INT("End Spin Variation", EndSpinVar, 0, 180);
+                        ImGui::EndGroup();
+
                         COLOR_EDIT("End Color", EndColorR, EndColorG, EndColorB, EndColorA);
-                        SLIDER_FLOAT("End Color Variation R", EndColorVarR, 0.0f, 1.0f, "%.2f");
-                        SLIDER_FLOAT("End Color Variation G", EndColorVarG, 0.0f, 1.0f, "%.2f");
-                        SLIDER_FLOAT("End Color Variation B", EndColorVarB, 0.0f, 1.0f, "%.2f");
-                        SLIDER_FLOAT("End Color Variation A", EndColorVarA, 0.0f, 1.0f, "%.2f");
+                        COLOR_EDIT("End Color Variation", EndColorVarR, EndColorVarG, EndColorVarB, EndColorVarA);
                     }
                     else if (section == 2) {
                         // Extra Parameters
+                        ImGui::BeginGroup();
                         SLIDER_FLOAT("Fade In Time", FadeInTime, 0.0f, 10.0f, "%.2f");
+                        ImGui::SameLine();
                         SLIDER_FLOAT("Fade In Time Variation", FadeInTimeVar, 0.0f, 10.0f, "%.2f");
+                        ImGui::EndGroup();
+
+                        ImGui::BeginGroup();
                         SLIDER_FLOAT("Fade Out Time", FadeOutTime, 0.0f, 10.0f, "%.2f");
+                        ImGui::SameLine();
                         SLIDER_FLOAT("Fade Out Time Variation", FadeOutTimeVar, 0.0f, 10.0f, "%.2f");
+                        ImGui::EndGroup();
+
+                        ImGui::BeginGroup();
                         SLIDER_INT("Start Radius", StartRadius, 0, 100);
+                        ImGui::SameLine();
                         SLIDER_INT("Start Radius Variation", StartRadiusVar, 0, 100);
+                        ImGui::EndGroup();
+
+                        ImGui::BeginGroup();
                         SLIDER_INT("End Radius", EndRadius, 0, 100);
+                        ImGui::SameLine();
                         SLIDER_INT("End Radius Variation", EndRadiusVar, 0, 100);
+                        ImGui::EndGroup();
+
+                        ImGui::BeginGroup();
                         SLIDER_INT("Rotation Per Second", RotatePerSecond, -100, 100);
+                        ImGui::SameLine();
                         SLIDER_INT("Rotation Variation", RotatePerSecondVar, 0, 100);
+                        ImGui::EndGroup();
+
                         SLIDER_INT("Emitter Mode (Gravity/Radius)", EmitterMode, 0, 1);
                         SLIDER_INT("Position Type (Relative/Grouped)", PositionType, 0, 1);
+
                         ImGui::Checkbox("Blend Additive", &particleData->isBlendAdditive) upd;
                         ImGui::Checkbox("Start Spin Equal To End Spin", &particleData->startSpinEqualToEndSpin) upd;
                         ImGui::Checkbox("Rotation Is Direction", &particleData->rotationIsDir) upd;
                         ImGui::Checkbox("Dynamic Rotation Is Direction", &particleData->dynamicRotationIsDir) upd;
 
                         ImGui::Checkbox("Uniform Color Mode", &particleData->uniformColorMode) upd;
+
+                        ImGui::BeginGroup();
                         SLIDER_FLOAT("Friction Position", frictionPos, 0.0f, 10.0f, "%.2f");
+                        ImGui::SameLine();
                         SLIDER_FLOAT("Friction Position Variation", frictionPosVar, 0.0f, 10.0f, "%.2f");
+                        ImGui::EndGroup();
+
+                        ImGui::BeginGroup();
                         SLIDER_FLOAT("Respawn", respawn, 0.0f, 10.0f, "%.2f");
+                        ImGui::SameLine();
                         SLIDER_FLOAT("Respawn Variation", respawnVar, 0.0f, 10.0f, "%.2f");
+                        ImGui::EndGroup();
+
                         ImGui::Checkbox("Order Sensitive", &particleData->orderSensitive) upd;
                         ImGui::Checkbox("Start Size Equal To End Size", &particleData->startSizeEqualToEndSize) upd;
                         ImGui::Checkbox("Start Radius Equal To End Radius", &particleData->startRadiusEqualToEndRadius) upd;
                         ImGui::Checkbox("Start RGB Var Sync", &particleData->startRGBVarSync) upd;
                         ImGui::Checkbox("End RGB Var Sync", &particleData->endRGBVarSync) upd;
+
+                        ImGui::BeginGroup();
                         SLIDER_FLOAT("Friction Size", frictionSize, 0.0f, 10.0f, "%.2f");
+                        ImGui::SameLine();
                         SLIDER_FLOAT("Friction Size Variation", frictionSizeVar, 0.0f, 10.0f, "%.2f");
+                        ImGui::EndGroup();
+
+                        ImGui::BeginGroup();
                         SLIDER_FLOAT("Friction Rotation", frictionRot, 0.0f, 10.0f, "%.2f");
+                        ImGui::SameLine();
                         SLIDER_FLOAT("Friction Rotation Variation", frictionRotVar, 0.0f, 10.0f, "%.2f");
+                        ImGui::EndGroup();
 
                         ImGui::InputInt("Custom Particle Index", &particleData->customParticleIdx);
                         if (ImGui::IsItemEdited() || ImGui::IsItemDeactivatedAfterEdit()) {
@@ -188,15 +306,16 @@ public:
 
 #endif
 
-                ImGui::Begin("Params Setup", &m_bVisible, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+                ImGui::Begin("Params Setup", &m_bVisible, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
                 ImGui::SetWindowFontScale(1.65f);
 
                 auto offst = ImVec2(220, 120);
                 ImGui::SetWindowSize(ImGui::GetMainViewport()->Size - offst);
-                ImGui::SetWindowPos(offst/2);
+                ImGui::SetWindowPos(offst / 2);
 
                 auto str_ps = std::string(ps.c_str());
-                if (ImGui::InputText("##ps-input", &str_ps)) {
+                auto psinpEdited = ImGui::InputText("##ps-input", &str_ps);
+                if (psinpEdited) {
                     ps = str_ps.c_str();
                     GameToolbox::particleFromString(ps, m_particle, 0);
                     GameToolbox::particleStringToStruct(ps, *particleData);
@@ -205,36 +324,60 @@ public:
                 if (ImGui::SameLine(); ImGui::Button("Stop")) m_particle->stopSystem();
                 if (ImGui::SameLine(); ImGui::Button("Resume")) m_particle->resumeSystem();
 
-                if (ImGui::BeginChild("asdwert")) {
+                if (ImGui::BeginChild("Params Setup Sub")) {
 
-                    if (ImGui::BeginChild("ShowcaseChild", { 320, 400 })) {
-                        GLuint glTexID = renderTex->m_pTexture->getName();
-                        auto sz = renderTex->m_pTexture->getContentSize();
-                        if (glTexID) ImGui::Image(
-                            (ImTextureID)(intptr_t)glTexID,
-                            { sz.width, sz.height }
-                        );
-                        bool hovered = ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
-                        bool held = ImGui::IsMouseDown(0);
-                        if (hovered && held) {
+                    if (ImGui::BeginChild("ShowcaseChild", ImVec2(320, 0))) {
+                        
+                        if (this and this->m_bgSprite) {
+                            auto rgb = this->m_bgSprite->getColor();
+                            float color[3] = { rgb.r / 255.f, rgb.g / 255.f, rgb.b / 255.f };
+                            if (ImGui::ColorEdit3("", color, ImGuiColorEditFlags_None)) {
+                                this->m_bgSprite->setColor({
+                                    static_cast<GLubyte>(color[0] * 255),
+                                    static_cast<GLubyte>(color[1] * 255),
+                                    static_cast<GLubyte>(color[2] * 255)
+                                    });
+                            }
+                        }
+                        if (renderTex and renderTex->m_pTexture) {
+                            GLuint glTexID = renderTex->m_pTexture->getName();
+                            auto sz = renderTex->m_pTexture->getContentSize();
+                            if (glTexID) ImGui::Image(
+                                (ImTextureID)(intptr_t)glTexID,
+                                ImVec2(sz.width, sz.height) * ImGui::GetIO().FontGlobalScale
+                            );
+                        };
+                        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)) {
                             ImGui::SetItemAllowOverlap();
                             ImGui::SetActiveID(ImGui::GetItemID(), ImGui::GetCurrentWindow());
                             auto mdt = ImGui::GetIO().MouseDelta / m_mainLayer->getScale();
-                            m_particle->setPosition(
+                            if (ImGui::GetIO().MouseDownDuration[0] > 0.1) m_particle->setPosition(
                                 m_particle->getPositionX() + mdt.x,
                                 m_particle->getPositionY() + -mdt.y
                             );
+                            if (fabs(ImGui::GetIO().MouseWheel) > 0.0) m_particle->setScale(
+                                m_particle->getScale() + (ImGui::GetIO().MouseWheel / 10)
+                            );
+                            if (ImGui::IsMouseDoubleClicked(0)) m_particle->resetSystem();
                         };
                         ImGui::SetWindowFontScale(2.0f);
-                        if (ImGui::Button("Save", ImVec2(-FLT_MIN, -FLT_MIN))) 
+                        if (ImGui::Button("Save", ImVec2(-FLT_MIN, 0)))
                             if (save) save->activate();
+                        ImGui::BeginDisabled();
+                        std::string ctrl_inf = 
+                            """" "- Hold and move to drag particle"
+                            "\n" "- Scroll mouse wheel to change scale"
+                            "\n" "- Double click to reset system (restart)"
+                            ;
+                        ImGui::TextWrapped("\n\n%s", ctrl_inf.c_str());
+                        ImGui::SetItemTooltip("%s", ctrl_inf.c_str());
+                        ImGui::EndDisabled();
                     }
                     ImGui::EndChild();
 
                     ImGui::SameLine();
 
                     ImGui::BeginChild("TabsChild", ImVec2(ImGui::GetWindowSize().x - 325, 0));
-                    ImGui::PushItemWidth(320);
                     ImGui::SetWindowFontScale(2.f);
                     if (ImGui::BeginTabBar("Tabs", ImGuiTabBarFlags_None)) {
                         if (ImGui::BeginTabItem("Motion")) {
@@ -252,13 +395,11 @@ public:
                         ImGui::EndTabBar();
                     }
                     ImGui::ScrollWhenDragging();
-                    ImGui::PopItemWidth();
                     ImGui::EndChild();
 
                 };
                 ImGui::EndChild();
 
-                ImGui::ScrollWhenDragging();
                 ImGui::End();
 
                 //use of this->m_bVisible in ImGui::Begin
@@ -267,6 +408,8 @@ public:
 #undef SLIDER_INT
 #undef SLIDER_FLOAT
 #undef COLOR_EDIT
+#undef iw1
+#undef iw2
 #undef upd
             }
         );
@@ -276,7 +419,7 @@ public:
 
     static ParticlePopup* create(std::string const& text) {
         auto ret = new ParticlePopup();
-        if (ret->initAnchored(160.f, 180.f, text, "GJ_square05.png")) {
+        if (ret->initAnchored(160.f, 180.f, text, "game_bg_13_001.png")) {
             ret->m_noElasticity = 1;
             ret->autorelease();
             return ret;

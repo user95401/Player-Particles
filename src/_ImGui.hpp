@@ -142,7 +142,6 @@ class $modify(ImGuiCocosExt, CCDirector) {
                 io.FontAllowUserScaling = true;
                 io.ConfigDragClickToInputText = true;
                 io.ConfigScrollbarScrollByPage = true;
-                io.MouseDoubleClickTime = 1.0f;
                 io.ConfigFlags |= ImGuiConfigFlags_IsTouchScreen;
                 GEODE_MACOS(io.ConfigMacOSXBehaviors = true);
 
@@ -167,6 +166,10 @@ class $modify(ImGuiCocosExt, CCDirector) {
                     io.AddKeyEvent(ImGuiKey_ModCtrl, kb->getControlKeyPressed());
                     io.AddKeyEvent(ImGuiKey_ModShift, kb->getShiftKeyPressed());
                 }
+                ImGui::GetIO().MouseSource = ImGuiMouseSource_TouchScreen;
+
+                auto fm = ImGui::GetMainViewport()->Size.x / 1920;
+                ImGui::GetIO().FontGlobalScale = (fm);
 
                 for (auto it = m_drawings.begin(); it != m_drawings.end();) {
                     auto& [node, callback] = *it;
