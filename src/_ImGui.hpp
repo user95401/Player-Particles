@@ -123,8 +123,8 @@ namespace ImGui {
 }
 
 #include <imgui-cocos.hpp>
-#include <Geode/modify/CCDirector.hpp>
-class $modify(ImGuiCocosExt, CCDirector) {
+#include <Geode/modify/MenuLayer.hpp>
+class $modify(ImGuiCocosExt, MenuLayer) {
 
     //running holder node and function to call on draw aslong as node running
     inline static std::map<geode::Ref<cocos2d::CCNode>, std::function<void()>> m_drawings;
@@ -133,9 +133,10 @@ class $modify(ImGuiCocosExt, CCDirector) {
         if (node && callback) m_drawings[node] = std::move(callback);
     }
 
-    $override void runWithScene(CCScene * pScene) {
-        CCDirector::runWithScene(pScene);
-        ImGuiCocos::get().setup(
+    static bool g_loaded;
+
+    $override bool init() {
+        if (not g_loaded) ImGuiCocos::get().setup(
             [] {
                 auto& io = ImGui::GetIO();
                 io.ConfigWindowsResizeFromEdges = true;
@@ -169,6 +170,7 @@ class $modify(ImGuiCocosExt, CCDirector) {
                 }
                 ImGui::GetIO().MouseSource = ImGuiMouseSource_TouchScreen;
 
+                //ui was developed at this resolution...
                 auto fm = ImGui::GetMainViewport()->Size.x / 1920;
                 ImGui::GetIO().FontGlobalScale = (fm);
 
@@ -185,6 +187,7 @@ class $modify(ImGuiCocosExt, CCDirector) {
 
             }
         );
-    };
-
+        g_loaded = true;
+        return MenuLayer::init();
+    }
 };
