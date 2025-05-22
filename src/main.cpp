@@ -1,7 +1,7 @@
 
 #include <_ImGui.hpp>
 #include <_main.hpp>
-#include <_updater.hpp>
+//#include <_updater.hpp> //beta testing helper
 
 std::string defaultEffect(std::string name) {
     return GameToolbox::saveParticleToString(
