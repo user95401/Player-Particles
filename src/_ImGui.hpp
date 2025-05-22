@@ -133,7 +133,7 @@ class $modify(ImGuiCocosExt, MenuLayer) {
         if (node && callback) m_drawings[node] = std::move(callback);
     }
 
-    static bool g_loaded;
+    inline static bool g_loaded;
 
     $override bool init() {
         if (not g_loaded) ImGuiCocos::get().setup(
