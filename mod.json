@@ -9,7 +9,7 @@
 	"early-load": true,
 	"id": "user95401.player_particles",
 	"name": "Player Particles",
-	"version": "v1.4.0-beta.5",
+	"version": "v1.4.0-beta.6",
 	"developer": "user95401",
 	"description": "customize player particles for drag, land etc",
 	"tags": [ "gameplay", "offline", "enhancement", "interface", "utility", "customization", "developer" ],
